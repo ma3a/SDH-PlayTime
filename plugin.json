@@ -1,0 +1,13 @@
+{
+  "name": "PlayTime",
+  "author": "ma3a",
+  "flags": [],
+  "publish": {
+    "tags": [
+      "utility",
+      "time-tracking"
+    ],
+    "description": "Tracks time you are playing, and provides reports like iPhones ScreenTime",
+    "image": "https://raw.githubusercontent.com/ma3a/SDH-PlayTime/main/assets/image.png"
+  }
+}
