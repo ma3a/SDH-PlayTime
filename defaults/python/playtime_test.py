@@ -1,13 +1,19 @@
 import os
 import unittest
+from unittest.mock import MagicMock, patch
 from datetime import datetime, timedelta
+from python.playtime import DATE_FORMAT
 from storage import Storage
 from playtime import PlayTime
 from storage_test import async_test
 
 
-class TestPlayTime(unittest.TestCase):
+class FixedClock:
+    def now(self):
+        return datetime(2022, 1, 20, 9, 0)
 
+
+class TestPlayTime(unittest.TestCase):
     file_path = "test_storage_playtime.json"
     storage: Storage
     playtime: PlayTime
@@ -15,7 +21,7 @@ class TestPlayTime(unittest.TestCase):
     def setUp(self) -> None:
         self.storage = Storage(self.file_path)
         self.storage.clear_file()
-        self.playtime = PlayTime(self.storage)
+        self.playtime = PlayTime(self.storage, FixedClock())
         return super().setUp()
 
     def tearDown(self) -> None:

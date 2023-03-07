@@ -5,11 +5,22 @@ from storage import Storage, OldVersionException
 from functools import reduce
 
 
+STORE_DATA_FOR_DAYS = 21
+"""
+To not make storage a huge file and for performance reasons, limit stored data for 3 weeks
+"""
+
 DATE_FORMAT = "%Y-%m-%d"
 logger = logging.getLogger()
 
 
+class Clock:
+    def now(self):
+        return datetime.now()
+
+
 class PlayTime:
+    clock: Clock
     """
     Internal dict format of the storage
     {
@@ -23,8 +34,9 @@ class PlayTime:
     """
     storage: Storage
 
-    def __init__(self, storage: Storage) -> None:
+    def __init__(self, storage: Storage, clock=Clock()) -> None:
         self.storage = storage
+        self.clock = clock
 
     async def get_play_time_statistics(self, start: date, end: date):
         (_, data) = await self.storage.get()
@@ -77,6 +89,22 @@ class PlayTime:
                 fun=lambda: self._add_new_time(i_started_at, i_ended_at,
                                                i_game_id, i_game_name)
             )
+
+        await retry_on_old_version_exception(
+            tries=5,
+            fun=lambda: self._clean_up_old_data()
+        )
+
+    async def _clean_up_old_data(self):
+        (version, data) = await self.storage.get()
+        last_date_to_have = self.clock.now().date() - timedelta(days=STORE_DATA_FOR_DAYS)
+        to_delete = list(filter(
+            lambda x: datetime.strptime(x, DATE_FORMAT).date() < last_date_to_have, data.keys())
+        )
+        for key in to_delete:
+            del data[key]
+
+        await self.storage.save(version, data)
 
     async def _add_new_time(self, started_at: int, ended_at: int, game_id: str, game_name: str):
         (version, data) = await self.storage.get()
