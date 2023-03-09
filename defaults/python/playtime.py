@@ -7,7 +7,7 @@ from functools import reduce
 
 STORE_DATA_FOR_DAYS = 21
 """
-To not make storage a huge file and for performance reasons, limit stored data for 3 weeks
+To not make storage a huge file and for performance reasons, limit of stored data for 3 weeks
 """
 
 DATE_FORMAT = "%Y-%m-%d"
@@ -21,25 +21,41 @@ class Clock:
 
 class PlayTime:
     clock: Clock
+    detailed_storage: Storage
     """
-    Internal dict format of the storage
-    {
-        "2022-01-31": {
-            "gameId": {
-                "name" : "Game name",
-                "time": 3600 // in seconds
+    Dict storage for time reports
+        {
+            "2022-01-31": {
+                "gameId": {
+                    "name" : "Game name",
+                    "time": 3600 // in seconds
+                }
             }
         }
-    }
     """
-    storage: Storage
 
-    def __init__(self, storage: Storage, clock=Clock()) -> None:
-        self.storage = storage
+    overall_storage: Storage
+    """
+    Dict storage for tracking overall time
+        {
+            "gameId": number // in seconds
+        }
+    """
+
+    def __init__(self, detailed_storage: Storage, overall_storage: Storage, clock=Clock()) -> None:
+        self.detailed_storage = detailed_storage
+        self.overall_storage = overall_storage
         self.clock = clock
 
+    async def get_overall_time_statistics(self, game_id: str):
+        (_, data) = await self.overall_storage.get()
+        game_id_str = str(game_id)
+        if (game_id_str in data):
+            return data[game_id_str]
+        return 0
+
     async def get_play_time_statistics(self, start: date, end: date):
-        (_, data) = await self.storage.get()
+        (_, data) = await self.detailed_storage.get()
 
         result = []
         date_range = date_range_list(start, end)
@@ -89,6 +105,11 @@ class PlayTime:
                 fun=lambda: self._add_new_time(i_started_at, i_ended_at,
                                                i_game_id, i_game_name)
             )
+            await retry_on_old_version_exception(
+                tries=5,
+                fun=lambda: self._add_time_to_overall_time(i_started_at, i_ended_at,
+                                                           i_game_id)
+            )
 
         await retry_on_old_version_exception(
             tries=5,
@@ -96,7 +117,7 @@ class PlayTime:
         )
 
     async def _clean_up_old_data(self):
-        (version, data) = await self.storage.get()
+        (version, data) = await self.detailed_storage.get()
         last_date_to_have = self.clock.now().date() - timedelta(days=STORE_DATA_FOR_DAYS)
         to_delete = list(filter(
             lambda x: datetime.strptime(x, DATE_FORMAT).date() < last_date_to_have, data.keys())
@@ -104,15 +125,13 @@ class PlayTime:
         for key in to_delete:
             del data[key]
 
-        await self.storage.save(version, data)
+        await self.detailed_storage.save(version, data)
 
     async def _add_new_time(self, started_at: int, ended_at: int, game_id: str, game_name: str):
-        (version, data) = await self.storage.get()
         interval_date = format_timestamp_as_date_only_string(started_at)
         interval_length_s = ended_at - started_at
-        logger.info(
-            f"Current data state before save: version={version}, data='{data}'")
 
+        (version, data) = await self.detailed_storage.get()
         game_id_str = str(game_id)
         if (not interval_date in data):
             data[interval_date] = {
@@ -130,8 +149,19 @@ class PlayTime:
             current_time = data[interval_date][game_id_str]["time"]
             data[interval_date][game_id_str]["time"] = current_time + \
                 interval_length_s
-        logger.info(f"Saving new state: version={version}, data='{data}'")
-        await self.storage.save(version, data)
+
+        await self.detailed_storage.save(version, data)
+
+    async def _add_time_to_overall_time(self, started_at: int, ended_at: int, game_id: str):
+        interval_length_s = ended_at - started_at
+        (version, data) = await self.overall_storage.get()
+        game_id_str = str(game_id)
+        if (not game_id_str in data):
+            data[game_id_str] = interval_length_s
+        else:
+            data[game_id_str] = data[game_id_str] + interval_length_s
+
+        await self.overall_storage.save(version, data)
 
 
 async def retry_on_old_version_exception(tries, fun):

@@ -14,19 +14,29 @@ class FixedClock:
 
 
 class TestPlayTime(unittest.TestCase):
-    file_path = "test_storage_playtime.json"
-    storage: Storage
-    playtime: PlayTime
+    detailed_storage_file_path = "test_storage_detailed.json"
+    detailed_storage: Storage
+
+    overall_storage_file_path = "test_storage_overall.json"
+    overall_storage: PlayTime
 
     def setUp(self) -> None:
-        self.storage = Storage(self.file_path)
-        self.storage.clear_file()
-        self.playtime = PlayTime(self.storage, FixedClock())
+        self.detailed_storage = Storage(self.detailed_storage_file_path)
+        self.detailed_storage.clear_file()
+
+        self.overall_storage = Storage(self.overall_storage_file_path)
+        self.overall_storage.clear_file()
+
+        self.playtime = PlayTime(
+            self.detailed_storage, self.overall_storage, FixedClock())
         return super().setUp()
 
     def tearDown(self) -> None:
-        if os.path.exists(self.file_path):
-            os.remove(self.file_path)
+        if os.path.exists(self.detailed_storage_file_path):
+            os.remove(self.detailed_storage_file_path)
+
+        if os.path.exists(self.overall_storage_file_path):
+            os.remove(self.overall_storage_file_path)
         return super().tearDown()
 
     @async_test
@@ -201,6 +211,24 @@ class TestPlayTime(unittest.TestCase):
                 "totalTime": 0
             }
         ])
+
+    @async_test
+    async def test_should_calculate_overall_time_for_game(self):
+        now = datetime(2022, 1, 1, 9, 0)
+        await self.playtime.add_new_time(now.timestamp(), (now + timedelta(hours=1)).timestamp(), "101", "Zelda BOTW")
+        await self.playtime.add_new_time((now + timedelta(hours=1)).timestamp(), (now + timedelta(hours=1, minutes=30)).timestamp(), "101", "Zelda BOTW")
+
+        result = await self.playtime.get_overall_time_statistics("101")
+        self.assertEquals(result, 3600 + 1800)
+
+    @async_test
+    async def test_should_calculate_overall_time_if_game_id_sometimes_a_number(self):
+        now = datetime(2022, 1, 1, 9, 0)
+        await self.playtime.add_new_time(now.timestamp(), (now + timedelta(hours=1)).timestamp(), 101, "Zelda BOTW")
+        await self.playtime.add_new_time((now + timedelta(hours=1)).timestamp(), (now + timedelta(hours=1, minutes=30)).timestamp(), "101", "Zelda BOTW")
+
+        result = await self.playtime.get_overall_time_statistics(101)
+        self.assertEquals(result, 3600 + 1800)
 
 
 if __name__ == '__main__':
