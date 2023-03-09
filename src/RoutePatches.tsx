@@ -13,7 +13,7 @@ export function updatePlaytimes(storage: Storage)
 		{
 			Object.entries(response.result).forEach(([gameId, time]) =>
 			{
-				let overview = appStore.GetAppOverviewByGameID(gameId)
+				let overview = appStore.GetAppOverviewByAppID(+gameId)
 				if (overview)
 				{
 					overview.minutes_playtime_forever = (time / 60.0).toFixed(1);
@@ -24,19 +24,19 @@ export function updatePlaytimes(storage: Storage)
 	})
 }
 
-export function updatePlaytime(storage: Storage, gameId: string)
+export function updatePlaytime(storage: Storage, appId: number)
 {
-	console.log(`updatePlaytime: ${gameId}`);
+	console.log(`updatePlaytime: ${appId}`);
 	storage.getOverallTimes().then(response =>
 	{
 		if (response.success)
         {
 
-	        let overview = appStore.GetAppOverviewByGameID(gameId)
+	        let overview = appStore.GetAppOverviewByAppID(appId)
 	        if (overview)
 	        {
-		        overview.minutes_playtime_forever = (response.result[gameId] / 60.0).toFixed(1);
-		        console.log(gameId, overview.minutes_playtime_forever)
+		        overview.minutes_playtime_forever = (response.result[`${appId}`] / 60.0).toFixed(1);
+		        console.log(appId, overview.minutes_playtime_forever)
 	        }
         }
 	})
@@ -66,19 +66,11 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Storage): Mountable
 				(_, ret1) =>
 				{
 					const overview: AppOverview = ret1.props.children.props.overview;
-					const game_id: string = ret1.props.children.props.overview.m_gameid;
+					const app_id: number = overview.appid;
 					console.log("ret1", ret1)
 					if (overview.app_type==1073741824)
 					{
-						console.log(`updatePlaytime: ${game_id}`);
-						storage.getOverallTimeForGame(game_id).then(response =>
-						{
-							if (response.success)
-							{
-								overview.minutes_playtime_forever = (response.result / 60.0).toFixed(1);
-								console.log(game_id, overview.minutes_playtime_forever)
-							}
-						});
+						updatePlaytime(storage, app_id)
 					}
 					return ret1;
 				}

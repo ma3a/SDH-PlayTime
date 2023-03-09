@@ -129,6 +129,7 @@ export default definePlugin((serverApi: ServerAPI) =>
 					wrapReactType(ret2.type);
 					afterPatch(ret2, "type", (_, ret3: any) =>
 					{
+						// updatePlaytimes(storage)
 						logger.info("ret3", ret3);
 						const element2 = findInReactTree(ret3.props.children, (x) => x?.props?.fnOnCancelFromTabHeader);
 						logger.info("element2", element2);
