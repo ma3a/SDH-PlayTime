@@ -22,7 +22,7 @@ export const WeeklyPlayTime: React.FC<{ data: PlayTimeForDay[] }> = (data) => {
     })
     const overall = dayTimes.map(it => it.time).reduce((a, c) => a + c, 0)
     const average = overall / dayTimes.length
-    const maxTime = Math.max(...dayTimes.map((dayTime) => dayTime.time));
+    const allTime = dayTimes.map((dayTime) => dayTime.time).reduce((a, b) => a + b, 0);
     return (
         <div className="playtime-chart">
             <Field label="Daily average" bottomSeparator="none">{humanReadablePlayTime(average, true)}</Field>
@@ -33,7 +33,7 @@ export const WeeklyPlayTime: React.FC<{ data: PlayTimeForDay[] }> = (data) => {
                         {dayTime.dayOfWeek.charAt(0)}
                     </div>
                     <div style={{ width: "85%" }}>
-                        <Timebar time={dayTime.time} maxTime={maxTime} />
+                        <Timebar time={dayTime.time} allTime={allTime} />
                     </div>
                 </HorizontalContainer>
             ))}

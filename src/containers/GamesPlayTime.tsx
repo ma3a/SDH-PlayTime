@@ -11,14 +11,14 @@ interface TimeByGame {
 
 export const GamesPlayTime: React.FC<{ data: PlayTimeForDay[] }> = (props) => {
     const timeByGames = sumTimeAndGroupByGame(props.data)
-    const maxTime = Math.max(...timeByGames.map((game) => game.time));
+    const allTime = timeByGames.map((game) => game.time).reduce((a, b) => a + b, 0);
 
     return (
         <div className="games-by-week">
             {timeByGames.map((game) => (
                 <VerticalContainer>
                     <div style={hide_text_on_overflow}>{game.gameName}</div>
-                    <Timebar time={game.time} maxTime={maxTime} />
+                    <Timebar time={game.time} allTime={allTime} />
                 </VerticalContainer>
             ))}
         </div >
