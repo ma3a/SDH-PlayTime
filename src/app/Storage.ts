@@ -1,7 +1,7 @@
 import { ServerAPI, ServerResponse } from "decky-frontend-lib";
 import logger from "../utils";
 import { toIsoDateOnly } from "./formatters";
-import { GameCompactInfo, PlayTimeForDay } from "./model";
+import {GameCompactInfo, OverallPlayTimes, PlayTimeForDay} from "./model";
 import { EventBus } from "./system";
 
 export class Storage {
@@ -33,4 +33,20 @@ export class Storage {
             { start_date: toIsoDateOnly(startDate), end_date: toIsoDateOnly(endDate) }
         )
     }
+
+	async getOverallTimes(): Promise<ServerResponse<OverallPlayTimes>>
+	{
+		return await this.serverApi.callPluginMethod<{}, OverallPlayTimes>(
+            "get_overall_times",
+				{}
+        )
+	}
+
+	async getOverallTimeForGame(gameId: string): Promise<ServerResponse<number>>
+	{
+		return await this.serverApi.callPluginMethod<{game_id: string}, number>(
+				"get_overall_time_for_game",
+				{game_id: gameId}
+		)
+	}
 }
