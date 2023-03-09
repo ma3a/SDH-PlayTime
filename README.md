@@ -5,7 +5,3 @@ A Steam Deck plugin for the [Decky Plugin Loader](https://github.com/SteamDeckHo
 
 ## Installation  
 Install it via https://plugins.deckbrew.xyz/  
-  
-## Planned features
-* Add reminder to take breaks (as in Xbox)
-    * Add settings for this reminder
