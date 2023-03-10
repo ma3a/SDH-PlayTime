@@ -4,7 +4,6 @@ import logging
 from storage import Storage, OldVersionException
 from functools import reduce
 
-
 STORE_DATA_FOR_DAYS = 21
 """
 To not make storage a huge file and for performance reasons, limit of stored data for 3 weeks
@@ -46,6 +45,10 @@ class PlayTime:
         self.detailed_storage = detailed_storage
         self.overall_storage = overall_storage
         self.clock = clock
+
+    async def get_overall_time_statistics_games(self):
+        (_, data) = await self.overall_storage.get()
+        return data
 
     async def get_overall_time_statistics(self, game_id: str):
         (_, data) = await self.overall_storage.get()
@@ -148,7 +151,7 @@ class PlayTime:
         else:
             current_time = data[interval_date][game_id_str]["time"]
             data[interval_date][game_id_str]["time"] = current_time + \
-                interval_length_s
+                                                       interval_length_s
 
         await self.detailed_storage.save(version, data)
 
