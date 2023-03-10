@@ -12,6 +12,7 @@ import {SteamEventMiddleware} from "./app/middleware";
 import {SessionPlayTime} from "./app/SessionPlayTime";
 import {patchAppPage, patchHomePage, patchLibraryPage} from "./RoutePatches";
 import {AppStore} from "./app/model";
+import {DetailedPage} from "./DetailedPage";
 
 declare global
 {
@@ -45,6 +46,16 @@ export default definePlugin((serverApi: ServerAPI) =>
 	let sessionPlayTime = new SessionPlayTime(eventBus)
 
 	mounts.push(new SteamEventMiddleware(eventBus, clock, Router))
+	mounts.push({
+		mount()
+		{
+			serverApi.routerHook.addRoute("/playtimes", () => <DetailedPage storage={storage} sessionPlayTime={sessionPlayTime} />)
+		},
+		unMount()
+		{
+			serverApi.routerHook.removeRoute("/playtimes")
+		}
+	})
 	mounts.push(patchAppPage(serverApi, storage))
 	mounts.push(patchHomePage(serverApi, storage))
 	mounts.push(patchLibraryPage(serverApi, storage))
@@ -94,7 +105,6 @@ export default definePlugin((serverApi: ServerAPI) =>
         icon: <FaClock />,
         onDismount() {
             mounts.forEach((it) => { it.unMount() })
-	        // sectionHook.unpatch()
         },
     };
 });

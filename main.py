@@ -53,6 +53,13 @@ class Plugin:
 		except Exception:
 			logger.exception("Unhandled exception")
 
+	async def get_all_play_time(self):
+		logger.info(f"get_all_play_time")
+		try:
+			return await self.playTime.get_all_play_time_statistics()
+		except Exception:
+			logger.exception("Unhandled exception")
+
 	async def get_overall_time_for_game(self, game_id: str):
 		logger.info(f"get_overall_time_for_game game_id = '{game_id}'")
 		try:

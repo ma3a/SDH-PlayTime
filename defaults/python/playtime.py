@@ -87,6 +87,26 @@ class PlayTime:
 
         return result
 
+    async def get_all_play_time_statistics(self):
+        (_, data) = await self.detailed_storage.get()
+
+        result = []
+        for date, day in data.items():
+            games = []
+            for key in day:
+                games.append({
+                    "gameId": key,
+                    "gameName": day[key]["name"],
+                    "time": day[key]["time"]
+                })
+            result.append({
+                "date": date,
+                "games": games,
+                "totalTime": reduce(lambda a, b: a + b["time"], games, 0)
+            })
+
+        return result
+
     async def add_new_time(self, started_at: int, ended_at: int, game_id: str, game_name: str):
         logger.info(f"Adding new interval")
         day_end_for_start_at = timestamp_of_end_of_day(

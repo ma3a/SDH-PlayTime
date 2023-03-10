@@ -38,6 +38,13 @@ export class Storage {
         )
     }
 
+	async getAllPlayTime(): Promise<ServerResponse<PlayTimeForDay[]>> {
+		return await this.serverApi.callPluginMethod<{}, PlayTimeForDay[]>(
+				"get_all_play_time",
+				{}
+		)
+	}
+
 	private async updateCache() {
 		let that = this
 		this.serverApi.callPluginMethod<{}, OverallPlayTimes>(

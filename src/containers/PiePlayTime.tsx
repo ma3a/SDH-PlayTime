@@ -1,6 +1,7 @@
 import { PlayTimeForDay } from "../app/model";
-import React from "react";
+import { FC } from "react";
 import {PieChart, Pie, Cell, Legend, ResponsiveContainer} from 'recharts';
+import {DataModule} from "./DataModule";
 
 interface TimeByGame {
     gameId: string,
@@ -8,7 +9,13 @@ interface TimeByGame {
     time: number
 }
 
-export const PiePlayTime: React.FC<{ data: PlayTimeForDay[] }> = (props) => {
+export class PieModule extends DataModule
+{
+	protected component: FC<{ data: PlayTimeForDay[] }> = PiePlayTime;
+	protected name: string = "pie chart";
+}
+
+const PiePlayTime: FC<{ data: PlayTimeForDay[] }> = (props) => {
     const data = sumTimeAndGroupByGame(props.data).map(value => {
 		return {
             name: value.gameName,
@@ -37,7 +44,7 @@ export const PiePlayTime: React.FC<{ data: PlayTimeForDay[] }> = (props) => {
 		};
 	}
 
-	const seededRandom = seed(42)
+	const seededRandom = seed(1234)
 
 	function getRandomColor() {
 		let letters = '0123456789ABCDEF';

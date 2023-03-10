@@ -2,6 +2,8 @@ import { PlayTimeForDay } from "../app/model";
 import { Timebar } from "../components/Timebar";
 import { VerticalContainer } from "../components/VerticalContainer";
 import { hide_text_on_overflow } from "../styles";
+import {DataModule} from "./DataModule";
+import {FC} from "react";
 
 interface TimeByGame {
     gameId: string,
@@ -9,7 +11,13 @@ interface TimeByGame {
     time: number
 }
 
-export const GamesPlayTime: React.FC<{ data: PlayTimeForDay[] }> = (props) => {
+export class GamesModule extends DataModule
+{
+	protected component: FC<{ data: PlayTimeForDay[] }> = GamesPlayTime;
+	protected name: string = "games";
+}
+
+const GamesPlayTime: React.FC<{ data: PlayTimeForDay[] }> = (props) => {
     const timeByGames = sumTimeAndGroupByGame(props.data)
     const allTime = timeByGames.map((game) => game.time).reduce((a, b) => a + b, 0);
 

@@ -3,6 +3,8 @@ import { humanReadablePlayTime } from "../app/formatters";
 import { PlayTimeForDay } from "../app/model";
 import { HorizontalContainer } from "../components/HorizontalContainer";
 import { Timebar } from "../components/Timebar";
+import {FC} from "react";
+import {DataModule} from "./DataModule";
 
 interface DayTime {
     dayOfWeek: string;
@@ -10,7 +12,13 @@ interface DayTime {
     date: Date
 }
 
-export const WeeklyPlayTime: React.FC<{ data: PlayTimeForDay[] }> = (data) => {
+export class WeeklyModule extends DataModule
+{
+	protected component: FC<{ data: PlayTimeForDay[] }> = WeeklyPlayTime;
+	protected name: string = "weekly";
+}
+
+const WeeklyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
     let dayTimes = data.data.map(it => {
         let date = new Date()
         date.setTime(Date.parse(it.date))
