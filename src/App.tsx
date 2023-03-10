@@ -12,6 +12,7 @@ import { Storage } from './app/Storage'
 import { GamesPlayTime } from "./containers/GamesPlayTime";
 import { Pager } from "./components/Pager";
 import { WeeklyPlayTime } from "./containers/WeeklyPlayTime"
+import {PiePlayTime} from "./containers/PiePlayTime";
 
 interface DateInterval {
     startDate: Date,
@@ -103,6 +104,13 @@ export const Content: VFC<{
                     </Focusable>
                 </PanelSectionRow>
             </PanelSection>}
+	        {!isLoading && <PanelSection title="pie chart by week">
+		        <PanelSectionRow>
+                    <Focusable onActivate={() => { }}>
+	                    <PiePlayTime data={playTimeForWeek} />
+                    </Focusable>
+		        </PanelSectionRow>
+	        </PanelSection>}
         </div >
     );
 };
