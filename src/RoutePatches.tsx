@@ -1,45 +1,35 @@
 import {afterPatch, RoutePatch, ServerAPI, wrapReactType} from "decky-frontend-lib";
 import {ReactElement} from "react";
-import {AppOverview} from "./app/model";
+import {AppDetails, AppOverview} from "./app/model";
 import {Mountable} from "./app/system";
 import {Storage} from "./app/Storage";
+import {runInAction} from "mobx";
 
 export function updatePlaytimes(storage: Storage)
 {
-	console.log("updatePlaytimes");
-	storage.getOverallTimes().then(response =>
+	storage.getOverallTimes().then(times =>
 	{
-		if (response.success)
+		Object.entries(times).forEach(([gameId, time]) =>
 		{
-			Object.entries(response.result).forEach(([gameId, time]) =>
+			let overview = appStore.GetAppOverviewByAppID(+gameId)
+			if (overview)
 			{
-				let overview = appStore.GetAppOverviewByAppID(+gameId)
-				if (overview)
-				{
-					overview.minutes_playtime_forever = (time / 60.0).toFixed(1);
-					console.log(gameId, overview.minutes_playtime_forever)
-				}
-			})
-		}
-	})
+				overview.minutes_playtime_forever = (time / 60.0).toFixed(1);
+			}
+		});
+	});
 }
 
 export function updatePlaytime(storage: Storage, appId: number)
 {
-	console.log(`updatePlaytime: ${appId}`);
-	storage.getOverallTimes().then(response =>
+	storage.getOverallTimes().then(times =>
 	{
-		if (response.success)
-        {
-
-	        let overview = appStore.GetAppOverviewByAppID(appId)
-	        if (overview)
-	        {
-		        overview.minutes_playtime_forever = (response.result[`${appId}`] / 60.0).toFixed(1);
-		        console.log(appId, overview.minutes_playtime_forever)
-	        }
-        }
-	})
+		let overview = appStore.GetAppOverviewByAppID(appId)
+		if (overview)
+		{
+			overview.minutes_playtime_forever = (times[`${appId}`] / 60.0).toFixed(1);
+		}
+	});
 }
 
 function routePatch(serverAPI: ServerAPI, path: string, patch: RoutePatch): Mountable
@@ -66,11 +56,19 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Storage): Mountable
 				(_, ret1) =>
 				{
 					const overview: AppOverview = ret1.props.children.props.overview;
+					const details: AppDetails = ret1.props.children.props.details;
 					const app_id: number = overview.appid;
-					console.log("ret1", ret1)
 					if (overview.app_type==1073741824)
 					{
-						updatePlaytime(storage, app_id)
+						const times = storage.getOverallTimesCache()
+
+						if (details && times)
+						{
+							runInAction(() =>
+							{
+								details.nPlaytimeForever = +(times[`${app_id}`] / 60.0).toFixed(1);
+							});
+						}
 					}
 					return ret1;
 				}
