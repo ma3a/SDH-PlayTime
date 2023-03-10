@@ -37,7 +37,7 @@ export const PiePlayTime: React.FC<{ data: PlayTimeForDay[] }> = (props) => {
 		};
 	}
 
-	const seededRandom = seed(512)
+	const seededRandom = seed(42)
 
 	function getRandomColor() {
 		let letters = '0123456789ABCDEF';
