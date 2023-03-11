@@ -52,7 +52,7 @@ const MonthlyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
 				        <XAxis dataKey="day" />
 				        <YAxis />
 				        <Legend />
-				        <Bar dataKey="time" fill="#8884d8" />
+				        <Bar dataKey="time" fill="#008ADA" />
 			        </BarChart>
 		        </ResponsiveContainer>
 	        </div>

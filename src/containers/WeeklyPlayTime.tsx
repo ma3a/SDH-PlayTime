@@ -54,7 +54,7 @@ const WeeklyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
 				        <YAxis type={"category"} dataKey="day"/>
 				        <XAxis type={"number"}  />
 				        <Legend />
-				        <Bar dataKey="time" fill="#8884d8" />
+				        <Bar dataKey="time" fill="#008ADA" />
 			        </BarChart>
 		        </ResponsiveContainer>
 	        </div>
