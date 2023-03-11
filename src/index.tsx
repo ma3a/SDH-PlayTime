@@ -4,18 +4,17 @@ import {
 	staticClasses,
 	SteamClient,
 } from "decky-frontend-lib";
-import {Content} from './App'
-import {FaClock} from "react-icons/fa";
-import {EventBus, Mountable, systemClock} from "./app/system";
-import {Storage} from "./app/Storage"
-import {SteamEventMiddleware} from "./app/middleware";
-import {SessionPlayTime} from "./app/SessionPlayTime";
-import {patchAppPage, patchHomePage, patchLibraryPage} from "./RoutePatches";
-import {AppStore} from "./app/model";
-import {DetailedPage} from "./DetailedPage";
+import { Content } from './App'
+import { FaClock } from "react-icons/fa";
+import { EventBus, Mountable, systemClock } from "./app/system";
+import { Storage } from "./app/Storage"
+import { SteamEventMiddleware } from "./app/middleware";
+import { SessionPlayTime } from "./app/SessionPlayTime";
+import { patchAppPage, patchHomePage, patchLibraryPage } from "./RoutePatches";
+import { AppStore } from "./app/model";
+import { DetailedPage } from "./DetailedPage";
 
-declare global
-{
+declare global {
 	// @ts-ignore
 	let SteamClient: SteamClient;
 	let appStore: AppStore;
@@ -35,8 +34,7 @@ declare global
 // });
 
 
-export default definePlugin((serverApi: ServerAPI) =>
-{
+export default definePlugin((serverApi: ServerAPI) => {
 	let clock = systemClock
 	let eventBus = new EventBus()
 
@@ -47,12 +45,10 @@ export default definePlugin((serverApi: ServerAPI) =>
 
 	mounts.push(new SteamEventMiddleware(eventBus, clock, Router))
 	mounts.push({
-		mount()
-		{
+		mount() {
 			serverApi.routerHook.addRoute("/playtimes", () => <DetailedPage storage={storage} sessionPlayTime={sessionPlayTime} />)
 		},
-		unMount()
-		{
+		unMount() {
 			serverApi.routerHook.removeRoute("/playtimes")
 		}
 	})
@@ -100,11 +96,11 @@ export default definePlugin((serverApi: ServerAPI) =>
 
 
 	return {
-        title: <div className={staticClasses.Title}>PlayTime</div>,
-        content: <Content storage={storage} sessionPlayTime={sessionPlayTime} />,
-        icon: <FaClock />,
-        onDismount() {
-            mounts.forEach((it) => { it.unMount() })
-        },
-    };
+		title: <div className={staticClasses.Title}>PlayTime</div>,
+		content: <Content storage={storage} sessionPlayTime={sessionPlayTime} />,
+		icon: <FaClock />,
+		onDismount() {
+			mounts.forEach((it) => { it.unMount() })
+		},
+	};
 });

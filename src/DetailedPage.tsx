@@ -1,68 +1,68 @@
-import {useEffect, useState, VFC} from "react";
-import {Storage} from "./app/Storage";
-import {SessionPlayTime} from "./app/SessionPlayTime";
-import {Field, PanelSection, PanelSectionRow, Tabs} from "decky-frontend-lib";
-import {humanReadablePlayTime} from "./app/formatters";
-import {PlayTimeForDay} from "./app/model";
-import {Pager} from "./components/Pager";
-import {WeeklyModule} from "./containers/WeeklyPlayTime";
-import {GamesModule} from "./containers/GamesPlayTime";
-import {PieModule} from "./containers/PiePlayTime";
+import { useEffect, useState, VFC } from "react";
+import { Storage } from "./app/Storage";
+import { SessionPlayTime } from "./app/SessionPlayTime";
+import { Field, PanelSection, PanelSectionRow, Tabs } from "decky-frontend-lib";
+import { humanReadablePlayTime } from "./app/formatters";
+import { PlayTimeForDay } from "./app/model";
+import { Pager } from "./components/Pager";
+import { WeeklyModule } from "./containers/WeeklyPlayTime";
+import { GamesModule } from "./containers/GamesPlayTime";
+import { PieModule } from "./containers/PiePlayTime";
 import logger from "./utils";
-import {MonthlyModule} from "./containers/MonthlyPlayTime";
+import { MonthlyModule } from "./containers/MonthlyPlayTime";
 
 export const DetailedPage: VFC<{
 	storage: Storage,
 	sessionPlayTime: SessionPlayTime
-}> = ({storage, sessionPlayTime}) => {
+}> = ({ storage, sessionPlayTime }) => {
 	const [currentTabRoute, setCurrentTabRoute] = useState<string>('all-time');
 	const currentPlayTime = sessionPlayTime.getPlayTime(Date.now())
 	let currentSessionTimeAsText = humanReadablePlayTime(currentPlayTime, true);
 
 
 	return (
-			<div
-					style={{
-						marginTop: '40px',
-						height: 'calc( 100% - 40px )',
-						background: '#0005',
-					}}
-			>
-				{currentPlayTime != 0 && <PanelSection>
-                    <PanelSectionRow >
-                        <Field label="Current play session">{currentSessionTimeAsText}</Field>
-                    </PanelSectionRow>
-                </PanelSection>}
-				<Tabs
-						activeTab={currentTabRoute}
-						onShowTab={(tabId: string) => {
-							setCurrentTabRoute(tabId);
-						}}
-						tabs={[
-							{
-								title: 'All Time',
-								content: <AllTimeTab storage={storage} />,
-								id: 'all-time',
-							},
-							{
-								title: 'By Month',
-								content: <ByMonthTab storage={storage} />,
-								id: 'by-month',
-							},
-							{
-								title: 'By Week',
-								content: <ByWeekTab storage={storage} />,
-								id: 'by-week',
-							},
-						]}
-				/>
-			</div>
-    );
+		<div
+			style={{
+				marginTop: '40px',
+				height: 'calc( 100% - 40px )',
+				background: '#0005',
+			}}
+		>
+			{currentPlayTime != 0 && <PanelSection>
+				<PanelSectionRow >
+					<Field label="Current play session">{currentSessionTimeAsText}</Field>
+				</PanelSectionRow>
+			</PanelSection>}
+			<Tabs
+				activeTab={currentTabRoute}
+				onShowTab={(tabId: string) => {
+					setCurrentTabRoute(tabId);
+				}}
+				tabs={[
+					{
+						title: 'All Time',
+						content: <AllTimeTab storage={storage} />,
+						id: 'all-time',
+					},
+					{
+						title: 'By Month',
+						content: <ByMonthTab storage={storage} />,
+						id: 'by-month',
+					},
+					{
+						title: 'By Week',
+						content: <ByWeekTab storage={storage} />,
+						id: 'by-week',
+					},
+				]}
+			/>
+		</div>
+	);
 }
 
 const AllTimeTab: VFC<{
 	storage: Storage,
-}> = ({storage}) => {
+}> = ({ storage }) => {
 	const [playTimeForAllTime, setPlayTimeForAllTime] = useState<PlayTimeForDay[]>([]);
 	const [isLoading, setLoading] = useState<Boolean>(false);
 
@@ -82,17 +82,17 @@ const AllTimeTab: VFC<{
 		new PieModule()
 	]
 	return (
-			<PanelSection title="all time">
-				{
-						!isLoading && modules.map(module => module.render(playTimeForAllTime))
-				}
-			</PanelSection>
+		<PanelSection title="all time">
+			{
+				!isLoading && modules.map(module => module.render(playTimeForAllTime))
+			}
+		</PanelSection>
 	)
 }
 
 const ByMonthTab: VFC<{
 	storage: Storage,
-}> = ({storage}) => {
+}> = ({ storage }) => {
 	const [playTimeForMonth, setPlayTimeForMonth] = useState<PlayTimeForDay[]>([]);
 	const [isLoading, setLoading] = useState<Boolean>(false);
 	const now = new Date()
@@ -128,14 +128,11 @@ const ByMonthTab: VFC<{
 		loadMonthlyReport(months[currentMonthIdx - 1])
 		setCurrentMonthIdx(currentMonthIdx - 1)
 	}
-	const currentText = () =>
-	{
-		if ((months.length - 1) - currentMonthIdx==0)
-		{
+	const currentText = () => {
+		if ((months.length - 1) - currentMonthIdx == 0) {
 			return "This month"
 		}
-		if ((months.length - 1) - currentMonthIdx==1)
-		{
+		if ((months.length - 1) - currentMonthIdx == 1) {
 			return "Previous month"
 		}
 		const s = months[currentMonthIdx].startDate.toISOString().substring(5, 7)
@@ -147,26 +144,26 @@ const ByMonthTab: VFC<{
 		new PieModule()
 	]
 	return (
-			<PanelSection title="by week">
-				<PanelSectionRow>
-					<Pager
-							pages={months}
-							currentIdx={currentMonthIdx}
-							onNext={onNextMonth}
-							onPrev={onPrevMonth}
-							currentText={currentText}
-					></Pager>
-				</PanelSectionRow>
-				{
-						!isLoading && modules.map(module => module.render(playTimeForMonth))
-				}
-			</PanelSection>
+		<PanelSection title="by week">
+			<PanelSectionRow>
+				<Pager
+					pages={months}
+					currentIdx={currentMonthIdx}
+					onNext={onNextMonth}
+					onPrev={onPrevMonth}
+					currentText={currentText}
+				></Pager>
+			</PanelSectionRow>
+			{
+				!isLoading && modules.map(module => module.render(playTimeForMonth))
+			}
+		</PanelSection>
 	)
 }
 
 export const ByWeekTab: VFC<{
 	storage: Storage,
-}> = ({storage}) => {
+}> = ({ storage }) => {
 	const [playTimeForWeek, setPlayTimeForWeek] = useState<PlayTimeForDay[]>([]);
 	const [isLoading, setLoading] = useState<Boolean>(false);
 	const now = new Date()
@@ -202,14 +199,11 @@ export const ByWeekTab: VFC<{
 		loadWeeklyReport(weeks[currentWeekIdx - 1])
 		setCurrentWeeksIdx(currentWeekIdx - 1)
 	}
-	const currentText = () =>
-	{
-		if ((weeks.length - 1) - currentWeekIdx==0)
-		{
+	const currentText = () => {
+		if ((weeks.length - 1) - currentWeekIdx == 0) {
 			return "This week"
 		}
-		if ((weeks.length - 1) - currentWeekIdx==1)
-		{
+		if ((weeks.length - 1) - currentWeekIdx == 1) {
 			return "Previous week"
 		}
 		const s = weeks[currentWeekIdx].startDate.toISOString().substring(5, 10)
@@ -222,20 +216,20 @@ export const ByWeekTab: VFC<{
 		new PieModule()
 	]
 	return (
-			<PanelSection title="by week">
-				<PanelSectionRow>
-					<Pager
-							pages={weeks}
-							currentIdx={currentWeekIdx}
-							onNext={onNextWeek}
-							onPrev={onPrevWeek}
-							currentText={currentText}
-					></Pager>
-				</PanelSectionRow>
-				{
-						!isLoading && modules.map(module => module.render(playTimeForWeek))
-				}
-			</PanelSection>
+		<PanelSection title="by week">
+			<PanelSectionRow>
+				<Pager
+					pages={weeks}
+					currentIdx={currentWeekIdx}
+					onNext={onNextWeek}
+					onPrev={onPrevWeek}
+					currentText={currentText}
+				></Pager>
+			</PanelSectionRow>
+			{
+				!isLoading && modules.map(module => module.render(playTimeForWeek))
+			}
+		</PanelSection>
 	)
 }
 

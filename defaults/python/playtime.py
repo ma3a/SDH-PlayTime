@@ -171,7 +171,7 @@ class PlayTime:
         else:
             current_time = data[interval_date][game_id_str]["time"]
             data[interval_date][game_id_str]["time"] = current_time + \
-                                                       interval_length_s
+                interval_length_s
 
         await self.detailed_storage.save(version, data)
 

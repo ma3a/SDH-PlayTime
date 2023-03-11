@@ -1,29 +1,27 @@
 export { GameCompactInfo, PlayTimeForDay, GameWithPlayTime, OverallPlayTimes, AppOverview, AppDetails, AppAchievements, AppAchievement, AppLanguages, AppStore }
 
 interface GameCompactInfo {
-    appId: string,
-    name: string
+	appId: string,
+	name: string
 }
 
 interface PlayTimeForDay {
-    date: string,
-    games: GameWithPlayTime[]
-    totalTime: number
+	date: string,
+	games: GameWithPlayTime[]
+	totalTime: number
 }
 
 interface GameWithPlayTime {
-    gameId: string,
-    gameName: string,
-    time: number
+	gameId: string,
+	gameName: string,
+	time: number
 }
 
-interface OverallPlayTimes
-{
+interface OverallPlayTimes {
 	[gameId: string]: number
 }
 
-interface AppOverview
-{
+interface AppOverview {
 	__proto__: any;
 	"appid": number,
 	"display_name": string,
@@ -110,8 +108,7 @@ interface AppOverview
 	"steam_deck_compat_category": number
 }
 
-interface AppAchievement
-{
+interface AppAchievement {
 	strID: string,
 	strName: string,
 	strDescription: string,
@@ -125,8 +122,7 @@ interface AppAchievement
 	flAchieved: number
 }
 
-interface AppAchievements
-{
+interface AppAchievements {
 	nAchieved: number
 	nTotal: number
 	vecAchievedHidden: AppAchievement[]
@@ -134,14 +130,12 @@ interface AppAchievements
 	vecUnachieved: AppAchievement[]
 }
 
-interface AppLanguages
-{
+interface AppLanguages {
 	strDisplayName: string,
 	strShortName: string
 }
 
-interface AppDetails
-{
+interface AppDetails {
 	achievements: AppAchievements,
 	bCanMoveInstallFolder: boolean,
 	bCloudAvailable: boolean,
@@ -218,8 +212,7 @@ interface AppDetails
 	vecScreenShots: any[],
 }
 
-interface AppStore
-{
+interface AppStore {
 	UpdateAppOverview: any,
 	GetAppOverviewByAppID: (id: number) => AppOverview,
 	GetAppOverviewByGameID: (id: string) => AppOverview,

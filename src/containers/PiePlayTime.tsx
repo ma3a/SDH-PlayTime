@@ -1,27 +1,26 @@
 import { PlayTimeForDay } from "../app/model";
 import { FC } from "react";
-import {PieChart, Pie, Cell, Legend, ResponsiveContainer} from 'recharts';
-import {DataModule} from "./DataModule";
+import { PieChart, Pie, Cell, Legend, ResponsiveContainer } from 'recharts';
+import { DataModule } from "./DataModule";
 
 interface TimeByGame {
-    gameId: string,
-    gameName: String,
-    time: number
+	gameId: string,
+	gameName: String,
+	time: number
 }
 
-export class PieModule extends DataModule
-{
+export class PieModule extends DataModule {
 	protected component: FC<{ data: PlayTimeForDay[] }> = PiePlayTime;
 	protected name: string = "pie chart";
 }
 
 const PiePlayTime: FC<{ data: PlayTimeForDay[] }> = (props) => {
-    const data = sumTimeAndGroupByGame(props.data).map(value => {
+	const data = sumTimeAndGroupByGame(props.data).map(value => {
 		return {
-            name: value.gameName,
+			name: value.gameName,
 			value: (value.time / 60.0)
-        }
-    })
+		}
+	})
 
 	const RADIAN = Math.PI / 180;
 
@@ -32,14 +31,14 @@ const PiePlayTime: FC<{ data: PlayTimeForDay[] }> = (props) => {
 		const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
 		return (
-				<text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
-					{`${(percent * 100).toFixed(0)}%`}
-				</text>
+			<text x={x} y={y} fill="white" textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central">
+				{`${(percent * 100).toFixed(0)}%`}
+			</text>
 		);
 	};
 
 	function seed(s: number) {
-		return function() {
+		return function () {
 			s = Math.sin(s) * 10000; return s - Math.floor(s);
 		};
 	}
@@ -56,46 +55,46 @@ const PiePlayTime: FC<{ data: PlayTimeForDay[] }> = (props) => {
 	}
 
 	return (
-        <div className="pie-by-week" style={{ width: '100%', height: 300 }}>
-	        <ResponsiveContainer>
-		        <PieChart>
-			        <Pie
-					        dataKey="value"
-					        isAnimationActive={true}
-					        data={data}
-					        fill="#0088FE"
-					        labelLine={false}
-					        label={renderCustomizedLabel}
-					        legendType="circle"
-			        >
-				        {data.map((_, index) => (
-						        <Cell key={`cell-${index}`} fill={getRandomColor()} />
-				        ))}
-			        </Pie>
-			        <Legend cx="30%" verticalAlign="bottom"/>
-		        </PieChart>
-	        </ResponsiveContainer>
-        </div >
-    );
+		<div className="pie-by-week" style={{ width: '100%', height: 300 }}>
+			<ResponsiveContainer>
+				<PieChart>
+					<Pie
+						dataKey="value"
+						isAnimationActive={true}
+						data={data}
+						fill="#0088FE"
+						labelLine={false}
+						label={renderCustomizedLabel}
+						legendType="circle"
+					>
+						{data.map((_, index) => (
+							<Cell key={`cell-${index}`} fill={getRandomColor()} />
+						))}
+					</Pie>
+					<Legend cx="30%" verticalAlign="bottom" />
+				</PieChart>
+			</ResponsiveContainer>
+		</div >
+	);
 };
 
 function sumTimeAndGroupByGame(data: PlayTimeForDay[]): TimeByGame[] {
-    const timeByGameId = new Map<string, number>()
-    const titleByGameId = new Map<string, string>()
+	const timeByGameId = new Map<string, number>()
+	const titleByGameId = new Map<string, string>()
 
-    data.flatMap(it => it.games).forEach(el => {
-        timeByGameId.set(el.gameId, (timeByGameId.get(el.gameId) || 0) + el.time)
-        titleByGameId.set(el.gameId, el.gameName)
-    })
+	data.flatMap(it => it.games).forEach(el => {
+		timeByGameId.set(el.gameId, (timeByGameId.get(el.gameId) || 0) + el.time)
+		titleByGameId.set(el.gameId, el.gameName)
+	})
 
-    const timeByGames: TimeByGame[] = []
-    timeByGameId.forEach((v, k) => {
-        timeByGames.push({
-            gameId: k,
-            gameName: titleByGameId.get(k) || "Unknown",
-            time: v
-        } as TimeByGame)
-    })
-    timeByGames.sort((a, b) => b.time - a.time)
-    return timeByGames;
+	const timeByGames: TimeByGame[] = []
+	timeByGameId.forEach((v, k) => {
+		timeByGames.push({
+			gameId: k,
+			gameName: titleByGameId.get(k) || "Unknown",
+			time: v
+		} as TimeByGame)
+	})
+	timeByGames.sort((a, b) => b.time - a.time)
+	return timeByGames;
 }
