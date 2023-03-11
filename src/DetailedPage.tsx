@@ -9,6 +9,7 @@ import {WeeklyModule} from "./containers/WeeklyPlayTime";
 import {GamesModule} from "./containers/GamesPlayTime";
 import {PieModule} from "./containers/PiePlayTime";
 import logger from "./utils";
+import {MonthlyModule} from "./containers/MonthlyPlayTime";
 
 export const DetailedPage: VFC<{
 	storage: Storage,
@@ -91,8 +92,76 @@ const AllTimeTab: VFC<{
 
 const ByMonthTab: VFC<{
 	storage: Storage,
-}> = ({}) => {
-	return (<div/>)
+}> = ({storage}) => {
+	const [playTimeForMonth, setPlayTimeForMonth] = useState<PlayTimeForDay[]>([]);
+	const [isLoading, setLoading] = useState<Boolean>(false);
+	const now = new Date()
+
+	const months: DateInterval[] = [...Array(12).keys()].reverse().map((wn) => {
+		const dayInMonth = new Date()
+		dayInMonth.setMonth(now.getMonth() - wn)
+		const monthStart = startOfMonth(dayInMonth)
+		return {
+			startDate: startOfMonth(dayInMonth),
+			endDate: endOfMonth(monthStart)
+		} as DateInterval
+	})
+
+	const loadMonthlyReport = (interval: DateInterval) => {
+		setLoading(true)
+		storage.getPlayTime(interval.startDate, interval.endDate).then((it) => {
+			if (it.success) {
+				setPlayTimeForMonth(it.result)
+				setLoading(false)
+			}
+		})
+	}
+	const [currentMonthIdx, setCurrentMonthIdx] = useState<number>(months.length - 1);
+	useEffect(() => {
+		loadMonthlyReport(months[currentMonthIdx])
+	}, [])
+	const onNextMonth = () => {
+		loadMonthlyReport(months[currentMonthIdx + 1])
+		setCurrentMonthIdx(currentMonthIdx + 1)
+	}
+	const onPrevMonth = () => {
+		loadMonthlyReport(months[currentMonthIdx - 1])
+		setCurrentMonthIdx(currentMonthIdx - 1)
+	}
+	const currentText = () =>
+	{
+		if ((months.length - 1) - currentMonthIdx==0)
+		{
+			return "This month"
+		}
+		if ((months.length - 1) - currentMonthIdx==1)
+		{
+			return "Previous month"
+		}
+		const s = months[currentMonthIdx].startDate.toISOString().substring(5, 7)
+		return `${s}`
+	}
+	const modules = [
+		new MonthlyModule(),
+		new GamesModule(),
+		new PieModule()
+	]
+	return (
+			<PanelSection title="by week">
+				<PanelSectionRow>
+					<Pager
+							pages={months}
+							currentIdx={currentMonthIdx}
+							onNext={onNextMonth}
+							onPrev={onPrevMonth}
+							currentText={currentText}
+					></Pager>
+				</PanelSectionRow>
+				{
+						!isLoading && modules.map(module => module.render(playTimeForMonth))
+				}
+			</PanelSection>
+	)
 }
 
 export const ByWeekTab: VFC<{
@@ -181,8 +250,20 @@ export function startOfWeek(date: Date): Date {
 	const diff = dt.getDate() - day + (day === 0 ? -6 : 1);
 	return new Date(dt.setDate(diff));
 }
+
 export function endOfWeek(startOfWeek: Date): Date {
 	const dt = new Date(startOfWeek);
 	const diff = dt.getDate() + 6;
 	return new Date(dt.setDate(diff));
 }
+
+export function startOfMonth(date: Date): Date {
+	const dt = new Date(date);
+	return new Date(dt.getFullYear(), dt.getMonth(), 2)
+}
+
+export function endOfMonth(date: Date): Date {
+	const dt = new Date(date);
+	return new Date(dt.getFullYear(), dt.getMonth() + 1, 1)
+}
+

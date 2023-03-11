@@ -6,23 +6,21 @@ import {DataModule} from "./DataModule";
 import {Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis} from "recharts";
 
 interface DayTime {
-    dayOfWeek: string;
     time: number;
     date: Date
 }
 
-export class WeeklyModule extends DataModule
+export class MonthlyModule extends DataModule
 {
-	protected component: FC<{ data: PlayTimeForDay[] }> = WeeklyPlayTime;
-	protected name: string = "weekly";
+	protected component: FC<{ data: PlayTimeForDay[] }> = MonthlyPlayTime;
+	protected name: string = "monthly";
 }
 
-const WeeklyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
+const MonthlyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
     let dayTimes = data.data.map(it => {
         let date = new Date()
         date.setTime(Date.parse(it.date))
         return {
-            dayOfWeek: date.toLocaleString('en-us', { weekday: 'long' }),
             time: it.totalTime,
             date: date
         } as DayTime
@@ -32,15 +30,16 @@ const WeeklyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
     return (
         <div className="playtime-chart">
             <Field label="Daily average" bottomSeparator="none">{humanReadablePlayTime(average, true)}</Field>
-            <Field label="Weekly overall" bottomSeparator="none">{humanReadablePlayTime(overall, true)}</Field>
+            <Field label="Monthly overall" bottomSeparator="none">{humanReadablePlayTime(overall, true)}</Field>
+
 	        <div className="bar-by-month" style={{ width: '100%', height: 300 }}>
 		        <ResponsiveContainer>
 			        <BarChart
 					        data={dayTimes.map(value => {
-						        return {
-							        day: value.dayOfWeek.substring(0,2),
-							        time: value.time
-						        }
+								return {
+									day: value.date.getDate(),
+									time: value.time
+								}
 					        })}
 					        margin={{
 						        top: 5,
@@ -48,16 +47,15 @@ const WeeklyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
 						        left: 20,
 						        bottom: 5,
 					        }}
-					        layout={"vertical"}
 			        >
 				        <CartesianGrid strokeDasharray="3 3" />
-				        <YAxis type={"category"} dataKey="day"/>
-				        <XAxis type={"number"}  />
+				        <XAxis dataKey="day" />
+				        <YAxis />
 				        <Legend />
 				        <Bar dataKey="time" fill="#8884d8" />
 			        </BarChart>
 		        </ResponsiveContainer>
 	        </div>
-        </div>
+        </div >
     );
 };

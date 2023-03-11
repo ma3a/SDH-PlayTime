@@ -1,5 +1,6 @@
 import {
-	Field, PanelSection,
+	ButtonItem,
+	Field, Navigation, PanelSection,
 	PanelSectionRow
 } from "decky-frontend-lib";
 import { VFC } from "react";
@@ -23,10 +24,9 @@ export const Content: VFC<{
                 </PanelSectionRow>
             </PanelSection>}
 	        <ByWeekTab storage={storage}/>
-	        {/*wip*/}
-	        {/*<Button onClick={() => Navigation.Navigate("/playtimes")}>*/}
-		    {/*    More*/}
-	        {/*</Button>*/}
+`	        <ButtonItem onClick={() => Navigation.Navigate("/playtimes")}>
+		        More
+	        </ButtonItem>`
         </div >
     );
 };
