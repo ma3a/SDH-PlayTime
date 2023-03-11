@@ -20,20 +20,6 @@ declare global {
 	let appStore: AppStore;
 }
 
-// const AppDetailsSections = findModuleChild((m) =>
-// {
-// 	if (typeof m!=='object') return;
-// 	for (const prop in m)
-// 	{
-// 		if (
-// 				m[prop]?.toString &&
-// 				m[prop].toString().includes("bShowGameInfo")
-// 		) return m[prop];
-// 	}
-// 	return;
-// });
-
-
 export default definePlugin((serverApi: ServerAPI) => {
 	let clock = systemClock
 	let eventBus = new EventBus()
@@ -55,43 +41,6 @@ export default definePlugin((serverApi: ServerAPI) => {
 	mounts.push(patchAppPage(serverApi, storage))
 	mounts.push(patchHomePage(serverApi, storage))
 	mounts.push(patchLibraryPage(serverApi, storage))
-	// let tabHook: Patch;
-	// mounts.push({
-	// 	mount()
-	// 	{
-	// 		tabHook = afterPatch(AppDetailsSections.prototype, 'render', (_: Record<string, unknown>[], ret1: any) =>
-	// 		{
-	// 			const element1 = findInReactTree(ret1.props.children, (x) => x?.props?.onTheaterMode);
-	// 			wrapReactType(element1.type);
-	// 			afterPatch(element1, "type", (_, ret2: any) =>
-	// 			{
-	// 				wrapReactType(ret2.type);
-	// 				afterPatch(ret2, "type", (_, ret3: any) =>
-	// 				{
-	// 					const element2 = findInReactTree(ret3.props.children, (x) => x?.props?.fnOnCancelFromTabHeader);
-	// 					wrapReactType(element2.type);
-	// 					afterPatch(element2, "type", (_, ret4: any) =>
-	// 					{
-	// 						ret4.props.tabs.push({
-	// 							id: "PlayTime",
-	// 							title: "Play Time",
-	// 							content: <Content storage={storage} sessionPlayTime={sessionPlayTime} />
-	// 						})
-	// 						return ret4;
-	// 					});
-	// 					return ret3;
-	// 				})
-	// 				return ret2;
-	// 			})
-	// 			return ret1;
-	// 		});
-	// 	},
-	// 	unMount()
-	// 	{
-	// 		tabHook.unpatch()
-	// 	}
-	// })
-
 	mounts.forEach((it) => { it.mount() })
 
 
