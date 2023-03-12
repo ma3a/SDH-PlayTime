@@ -45,7 +45,7 @@ export const HorizontalContainerCSS = {
     horizontal__container: {
         display: "flex",
         flexDirection: "row",
-        alignContent: "center"
+        alignContent: "space-between"
     } as CSSProperties
 }
 

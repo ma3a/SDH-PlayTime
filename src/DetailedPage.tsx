@@ -58,7 +58,6 @@ const AllTimeTab: VFC<{
 	useEffect(() => {
 		setLoading(true)
 		storage.getAllPlayTime().then((it) => {
-			logger.info(it)
 			if (it.success) {
 				setPlayTimeForAllTime(it.result)
 				setLoading(false)

@@ -3,7 +3,8 @@ import { humanReadableTime } from "../app/formatters";
 import { PlayTimeForDay } from "../app/model";
 import { FC } from "react";
 import { DataModule } from "./DataModule";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { HorizontalContainer } from "../components/HorizontalContainer";
+import { Timebar } from "../components/Timebar";
 
 interface DayTime {
 	dayOfWeek: string;
@@ -30,32 +31,20 @@ const WeeklyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
 	const average = overall / dayTimes.length
 	return (
 		<div className="playtime-chart">
-			<Field label="Daily average" bottomSeparator="none">{humanReadableTime(average, true)}</Field>
-			<Field label="Weekly overall" bottomSeparator="none">{humanReadableTime(overall, true)}</Field>
-			<div className="bar-by-month" style={{ width: '100%', height: 300 }}>
-				<ResponsiveContainer>
-					<BarChart
-						data={dayTimes.map(value => {
-							return {
-								day: value.dayOfWeek.substring(0, 2),
-								time: value.time
-							}
-						})}
-						margin={{
-							top: 5,
-							right: 30,
-							left: 20,
-							bottom: 5,
-						}}
-						layout={"vertical"}
-					>
-						<CartesianGrid strokeDasharray="3 3" />
-						<YAxis type={"category"} dataKey="day" />
-						<XAxis type={"number"} tickFormatter={(e: number) => humanReadableTime(e, true)} axisLine={false} />
-						<Bar dataKey="time" fill="#008ADA" />
-					</BarChart>
-				</ResponsiveContainer>
-			</div>
+			<div className="playtime-chart">
+				<Field label="Daily average" bottomSeparator="none">{humanReadableTime(average, true)}</Field>
+				<Field label="Weekly overall" bottomSeparator="none">{humanReadableTime(overall, true)}</Field>
+				{dayTimes.map((dayTime) => (
+					<HorizontalContainer>
+						<div style={{ width: "10%" }}>
+							{dayTime.dayOfWeek.charAt(0)}
+						</div>
+						<div style={{ width: "90%" }}>
+							<Timebar time={dayTime.time} allTime={overall} />
+						</div>
+					</HorizontalContainer>
+				))}
+			</div >
 		</div>
 	);
 };
