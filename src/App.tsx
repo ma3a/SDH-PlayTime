@@ -8,6 +8,7 @@ import { humanReadablePlayTime } from "./app/formatters";
 import { SessionPlayTime } from "./app/SessionPlayTime";
 import { Storage } from './app/Storage'
 import { ByWeekTab } from "./DetailedPage";
+import { navigateToPage, DETAILED_REPORT_ROUTE } from "./navigation";
 
 export const Content: VFC<{
     storage: Storage,
@@ -24,9 +25,6 @@ export const Content: VFC<{
                 </PanelSectionRow>
             </PanelSection>}
             <ByWeekTab storage={storage} />
-            `	        <ButtonItem onClick={() => Navigation.Navigate("/playtimes")}>
-                More
-            </ButtonItem>`
         </div >
     );
 };

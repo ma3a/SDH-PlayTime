@@ -1,8 +1,6 @@
 import { useEffect, useState, VFC } from "react";
 import { Storage } from "./app/Storage";
-import { SessionPlayTime } from "./app/SessionPlayTime";
-import { Field, PanelSection, PanelSectionRow, Tabs } from "decky-frontend-lib";
-import { humanReadablePlayTime } from "./app/formatters";
+import { PanelSection, PanelSectionRow, Tabs } from "decky-frontend-lib";
 import { PlayTimeForDay } from "./app/model";
 import { Pager } from "./components/Pager";
 import { WeeklyModule } from "./containers/WeeklyPlayTime";
@@ -12,13 +10,9 @@ import logger from "./utils";
 import { MonthlyModule } from "./containers/MonthlyPlayTime";
 
 export const DetailedPage: VFC<{
-	storage: Storage,
-	sessionPlayTime: SessionPlayTime
-}> = ({ storage, sessionPlayTime }) => {
+	storage: Storage
+}> = ({ storage }) => {
 	const [currentTabRoute, setCurrentTabRoute] = useState<string>('all-time');
-	const currentPlayTime = sessionPlayTime.getPlayTime(Date.now())
-	let currentSessionTimeAsText = humanReadablePlayTime(currentPlayTime, true);
-
 
 	return (
 		<div
@@ -28,11 +22,6 @@ export const DetailedPage: VFC<{
 				background: '#0005',
 			}}
 		>
-			{currentPlayTime != 0 && <PanelSection>
-				<PanelSectionRow >
-					<Field label="Current play session">{currentSessionTimeAsText}</Field>
-				</PanelSectionRow>
-			</PanelSection>}
 			<Tabs
 				activeTab={currentTabRoute}
 				onShowTab={(tabId: string) => {
