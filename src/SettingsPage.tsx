@@ -1,9 +1,9 @@
-import { Dropdown, Field, Focusable, PanelSection } from "decky-frontend-lib";
+import {Dropdown, Field, Focusable, PanelSection, SidebarNavigation} from "decky-frontend-lib";
 import { useEffect, useState, VFC } from "react";
-import { ChartStyle, DEFAULTS, PlayTimeSettings, Settings } from "./app/settings";
+import {ChartStyle, DEFAULTS, PlayTimeSettings, Settings} from "./app/settings";
 import { focus_panel_no_padding } from "./styles";
 
-export const SettingsPage: VFC<{
+export const GeneralSettings: VFC<{
     settings: Settings,
 }> = ({ settings }) => {
     let [current, setCurrent] = useState<PlayTimeSettings>(DEFAULTS)
@@ -22,7 +22,7 @@ export const SettingsPage: VFC<{
     }, [])
 
     let updateSettings = async () => {
-        await settings.save(current)
+        await settings.save(current);
         loadSettings()
     }
 
@@ -31,7 +31,7 @@ export const SettingsPage: VFC<{
             {loaded && <div style={{ marginTop: "40px", height: "calc(100% - 40px)" }}>
                 <PanelSection title="Appearance">
                     <Field label="Game charts type">
-                        <Dropdown selectedOption={current.gameChartStyle} rgOptions={[
+                        <Dropdown selectedOption={current?.gameChartStyle} rgOptions={[
                             { label: "Bar charts", data: ChartStyle.BAR },
                             { label: "Pie charts", data: ChartStyle.PIE }
                         ]} onChange={(v) => { current.gameChartStyle = v.data; updateSettings() }}></Dropdown>
@@ -40,4 +40,15 @@ export const SettingsPage: VFC<{
             </div>}
         </Focusable >
     );
+};
+
+export const SettingsPage: VFC<{
+    settings: Settings,
+}> = ({ settings }) => {
+    return <SidebarNavigation pages={[
+        {
+            title: "General",
+            content: <GeneralSettings settings={settings} />
+        }
+    ]}/>
 };

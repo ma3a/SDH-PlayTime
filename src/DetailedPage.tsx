@@ -7,7 +7,7 @@ import { WeeklyModule } from "./containers/WeeklyPlayTime";
 import { GamesModule } from "./containers/GamesPlayTime";
 import { PieModule } from "./containers/PiePlayTime";
 import { MonthlyModule } from "./containers/MonthlyPlayTime";
-import { ChartStyle, DEFAULTS, PlayTimeSettings, Settings } from "./app/settings";
+import {ChartStyle, DEFAULTS, PlayTimeSettings, Settings} from "./app/settings";
 import { DataModule } from "./containers/DataModule";
 
 export const DetailedPage: VFC<{

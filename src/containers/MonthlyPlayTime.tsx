@@ -3,7 +3,7 @@ import { humanReadableTime } from "../app/formatters";
 import { PlayTimeForDay } from "../app/model";
 import { FC } from "react";
 import { DataModule } from "./DataModule";
-import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
 
 interface DayTime {
 	time: number;
