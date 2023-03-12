@@ -1,4 +1,4 @@
-import {Dropdown, Field, Focusable, PanelSection, SidebarNavigation} from "decky-frontend-lib";
+import {Dropdown, Field, Focusable, PanelSectionRow, PanelSection, SidebarNavigation} from "decky-frontend-lib";
 import { useEffect, useState, VFC } from "react";
 import {ChartStyle, DEFAULTS, PlayTimeSettings, Settings} from "./app/settings";
 import { focus_panel_no_padding } from "./styles";
@@ -22,7 +22,7 @@ export const GeneralSettings: VFC<{
     }, [])
 
     let updateSettings = async () => {
-        await settings.save(current);
+        await settings.save(current)
         loadSettings()
     }
 
@@ -30,12 +30,29 @@ export const GeneralSettings: VFC<{
         <Focusable style={{ minWidth: "100%", minHeight: "100%", ...focus_panel_no_padding }}>
             {loaded && <div style={{ marginTop: "40px", height: "calc(100% - 40px)" }}>
                 <PanelSection title="Appearance">
-                    <Field label="Game charts type">
-                        <Dropdown selectedOption={current?.gameChartStyle} rgOptions={[
-                            { label: "Bar charts", data: ChartStyle.BAR },
-                            { label: "Pie charts", data: ChartStyle.PIE }
-                        ]} onChange={(v) => { current.gameChartStyle = v.data; updateSettings() }}></Dropdown>
-                    </Field>
+                    <PanelSectionRow>
+                        <Field label="Game charts type">
+                            <Dropdown selectedOption={current?.gameChartStyle} rgOptions={[
+                                { label: "Bar charts", data: ChartStyle.BAR },
+                                { label: "Pie charts", data: ChartStyle.PIE }
+                            ]} onChange={
+                                (v) => { current.gameChartStyle = v.data; updateSettings() }}></Dropdown>
+                        </Field>
+                    </PanelSectionRow>
+                </PanelSection>
+                <PanelSection title="Notifications">
+                    <PanelSectionRow>
+                        <Field label="Remind me to take breaks">
+                            <Dropdown selectedOption={current.reminderToTakeBreaksInterval} rgOptions={[
+                                { label: "Never", data: -1 },
+                                { label: "Every 15 min", data: 15 },
+                                { label: "Every 30 min", data: 30 },
+                                { label: "Every hour", data: 60 },
+                                { label: "Every 2 hours", data: 120 }
+                            ]} onChange={
+                                (v) => { current.reminderToTakeBreaksInterval = v.data; updateSettings() }}></Dropdown>
+                        </Field>
+                    </PanelSectionRow>
                 </PanelSection>
             </div>}
         </Focusable >

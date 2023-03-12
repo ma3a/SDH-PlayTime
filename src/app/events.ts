@@ -8,4 +8,4 @@ export type Events =
     | { type: "ResumeFromSuspend", createdAt: number, game: GameCompactInfo | null }
     | { type: "Unmount", createdAt: number }
     | { type: "CommitInterval", startedAt: number, endedAt: number, game: GameCompactInfo }
-    | { type: "NotifyToTakeBreak", playTimeMs: number }
+    | { type: "NotifyToTakeBreak", playTimeSeconds: number }

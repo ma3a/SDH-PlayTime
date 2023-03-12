@@ -17,6 +17,8 @@ import { Settings } from "./app/settings";
 import { Content } from "./App";
 import { SettingsPage } from "./SettingsPage";
 import { navigateToPage, DETAILED_REPORT_ROUTE, SETTINGS_ROUTE } from "./navigation";
+import { BreaksReminder } from "./app/notification";
+import { humanReadableTime } from "./app/formatters";
 
 declare global {
 	// @ts-ignore
@@ -34,6 +36,23 @@ export default definePlugin((serverApi: ServerAPI) => {
 	let sessionPlayTime = new SessionPlayTime(eventBus)
 	let settings = new Settings()
 
+	mounts.push(new BreaksReminder(eventBus, settings, sessionPlayTime))
+	eventBus.addSubscriber((event) => {
+		switch (event.type) {
+			case "NotifyToTakeBreak":
+				serverApi.toaster.toast({
+					body:
+						<div>
+							You already playing for {humanReadableTime(event.playTimeSeconds)},
+						</div>,
+					title: "PlayTime: remember to take a breaks",
+					icon: <FaClock />,
+					duration: 10 * 1000,
+					critical: true
+				})
+				break;
+		}
+	})
 	mounts.push(new SteamEventMiddleware(eventBus, clock))
 	mounts.push({
 		mount() {
@@ -79,6 +98,9 @@ export default definePlugin((serverApi: ServerAPI) => {
 			</div>,
 		icon: <FaClock />,
 		onDismount() {
+			// It is possible that user will update or reload plugin for some reason during playtime
+			// so we will try to commit latest playtime interval
+			eventBus.emit({ type: "Unmount", createdAt: clock.getTimeMs() })
 			mounts.forEach((it) => { it.unMount() })
 		},
 	};
