@@ -11,7 +11,7 @@ interface TimeByGame {
 
 export class PieModule extends DataModule {
 	protected component: FC<{ data: PlayTimeForDay[] }> = PiePlayTime;
-	protected name: string = "pie chart";
+	protected name: string = "games";
 }
 
 const PiePlayTime: FC<{ data: PlayTimeForDay[] }> = (props) => {

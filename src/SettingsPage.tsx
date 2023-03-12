@@ -30,11 +30,11 @@ export const SettingsPage: VFC<{
         <Focusable style={{ minWidth: "100%", minHeight: "100%", ...focus_panel_no_padding }}>
             {loaded && <div style={{ marginTop: "40px", height: "calc(100% - 40px)" }}>
                 <PanelSection title="Appearance">
-                    <Field label="Quick access chart types">
-                        <Dropdown selectedOption={current.chartStyles} rgOptions={[
+                    <Field label="Game charts type">
+                        <Dropdown selectedOption={current.gameChartStyle} rgOptions={[
                             { label: "Bar charts", data: ChartStyle.BAR },
                             { label: "Pie charts", data: ChartStyle.PIE }
-                        ]} onChange={(v) => { current.chartStyles = v.data; updateSettings() }}></Dropdown>
+                        ]} onChange={(v) => { current.gameChartStyle = v.data; updateSettings() }}></Dropdown>
                     </Field>
                 </PanelSection>
             </div>}

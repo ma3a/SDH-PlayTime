@@ -37,7 +37,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 	mounts.push(new SteamEventMiddleware(eventBus, clock, Router))
 	mounts.push({
 		mount() {
-			serverApi.routerHook.addRoute(DETAILED_REPORT_ROUTE, () => <DetailedPage storage={storage} />)
+			serverApi.routerHook.addRoute(DETAILED_REPORT_ROUTE, () => <DetailedPage storage={storage} settings={settings} />)
 		},
 		unMount() {
 			serverApi.routerHook.removeRoute(DETAILED_REPORT_ROUTE)
@@ -62,7 +62,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 		title: <div className={staticClasses.Title}>PlayTime</div>,
 		content:
 			<div>
-				<Content storage={storage} sessionPlayTime={sessionPlayTime} />
+				<Content storage={storage} sessionPlayTime={sessionPlayTime} settings={settings} />
 
 				<PanelSection title="Misc">
 					<PanelSectionRow>

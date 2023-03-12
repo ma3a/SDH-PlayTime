@@ -6,13 +6,24 @@ import { Pager } from "./components/Pager";
 import { WeeklyModule } from "./containers/WeeklyPlayTime";
 import { GamesModule } from "./containers/GamesPlayTime";
 import { PieModule } from "./containers/PiePlayTime";
-import logger from "./utils";
 import { MonthlyModule } from "./containers/MonthlyPlayTime";
+import { ChartStyle, DEFAULTS, PlayTimeSettings, Settings } from "./app/settings";
+import { DataModule } from "./containers/DataModule";
 
 export const DetailedPage: VFC<{
-	storage: Storage
-}> = ({ storage }) => {
+	storage: Storage, settings: Settings
+}> = ({ storage, settings }) => {
 	const [currentTabRoute, setCurrentTabRoute] = useState<string>('all-time');
+	const [isLoading, setLoading] = useState<Boolean>(true)
+	const [currentSettings, setCurrentSettings] = useState<PlayTimeSettings>(DEFAULTS)
+
+	useEffect(() => {
+		setLoading(true)
+		settings.get().then((it) => {
+			setCurrentSettings(it)
+			setLoading(false)
+		});
+	}, [])
 
 	return (
 		<div
@@ -22,7 +33,7 @@ export const DetailedPage: VFC<{
 				background: '#0005',
 			}}
 		>
-			<Tabs
+			{!isLoading && <Tabs
 				activeTab={currentTabRoute}
 				onShowTab={(tabId: string) => {
 					setCurrentTabRoute(tabId);
@@ -30,28 +41,28 @@ export const DetailedPage: VFC<{
 				tabs={[
 					{
 						title: 'All Time',
-						content: <AllTimeTab storage={storage} />,
+						content: <AllTimeTab storage={storage} settings={currentSettings} />,
 						id: 'all-time',
 					},
 					{
 						title: 'By Month',
-						content: <ByMonthTab storage={storage} />,
+						content: <ByMonthTab storage={storage} settings={currentSettings} />,
 						id: 'by-month',
 					},
 					{
 						title: 'By Week',
-						content: <ByWeekTab storage={storage} />,
+						content: <ByWeekTab storage={storage} settings={currentSettings} />,
 						id: 'by-week',
 					},
 				]}
-			/>
+			/>}
 		</div>
 	);
 }
 
 const AllTimeTab: VFC<{
-	storage: Storage,
-}> = ({ storage }) => {
+	storage: Storage, settings: PlayTimeSettings
+}> = ({ storage, settings }) => {
 	const [playTimeForAllTime, setPlayTimeForAllTime] = useState<PlayTimeForDay[]>([]);
 	const [isLoading, setLoading] = useState<Boolean>(false);
 
@@ -65,10 +76,12 @@ const AllTimeTab: VFC<{
 		});
 	}, [])
 
-	const modules = [
-		new GamesModule(),
-		new PieModule()
-	]
+	let modules = []
+	if (settings.gameChartStyle == ChartStyle.BAR) {
+		modules.push(new GamesModule())
+	} else {
+		modules.push(new PieModule())
+	}
 	return (
 		<PanelSection title="all time">
 			{
@@ -79,8 +92,8 @@ const AllTimeTab: VFC<{
 }
 
 const ByMonthTab: VFC<{
-	storage: Storage,
-}> = ({ storage }) => {
+	storage: Storage, settings: PlayTimeSettings
+}> = ({ storage, settings }) => {
 	const [playTimeForMonth, setPlayTimeForMonth] = useState<PlayTimeForDay[]>([]);
 	const [isLoading, setLoading] = useState<Boolean>(false);
 	const now = new Date()
@@ -123,11 +136,15 @@ const ByMonthTab: VFC<{
 		const s = months[currentMonthIdx].startDate.toLocaleString('en-us', { month: 'long' })
 		return `${s}`
 	}
-	const modules = [
-		new MonthlyModule(),
-		new GamesModule(),
-		new PieModule()
+
+	const modules: DataModule[] = [
+		new MonthlyModule()
 	]
+	if (settings.gameChartStyle == ChartStyle.BAR) {
+		modules.push(new GamesModule())
+	} else {
+		modules.push(new PieModule())
+	}
 	return (
 		<div>
 			<PanelSection title="by week">
@@ -149,8 +166,8 @@ const ByMonthTab: VFC<{
 }
 
 export const ByWeekTab: VFC<{
-	storage: Storage,
-}> = ({ storage }) => {
+	storage: Storage, settings: PlayTimeSettings
+}> = ({ storage, settings }) => {
 	const [playTimeForWeek, setPlayTimeForWeek] = useState<PlayTimeForDay[]>([]);
 	const [isLoading, setLoading] = useState<Boolean>(false);
 	const now = new Date()
@@ -197,11 +214,14 @@ export const ByWeekTab: VFC<{
 		const e = weeks[currentWeekIdx].endDate.toISOString().substring(5, 10)
 		return `${s} - ${e}`
 	}
-	const modules = [
-		new WeeklyModule(),
-		new GamesModule(),
-		new PieModule()
+	const modules: DataModule[] = [
+		new WeeklyModule()
 	]
+	if (settings.gameChartStyle == ChartStyle.BAR) {
+		modules.push(new GamesModule())
+	} else {
+		modules.push(new PieModule())
+	}
 	return (
 		<div>
 			<PanelSection>
