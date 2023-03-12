@@ -1,21 +1,19 @@
 import {
-    ButtonItem,
-    Field, Navigation, PanelSection,
+    Field, PanelSection,
     PanelSectionRow
 } from "decky-frontend-lib";
 import { VFC } from "react";
-import { humanReadablePlayTime } from "./app/formatters";
+import { humanReadableTime } from "./app/formatters";
 import { SessionPlayTime } from "./app/SessionPlayTime";
 import { Storage } from './app/Storage'
 import { ByWeekTab } from "./DetailedPage";
-import { navigateToPage, DETAILED_REPORT_ROUTE } from "./navigation";
 
 export const Content: VFC<{
     storage: Storage,
     sessionPlayTime: SessionPlayTime
 }> = ({ storage, sessionPlayTime }) => {
     const currentPlayTime = sessionPlayTime.getPlayTime(Date.now())
-    let currentSessionTimeAsText = humanReadablePlayTime(currentPlayTime, true);
+    let currentSessionTimeAsText = humanReadableTime(currentPlayTime, true);
 
     return (
         <div>

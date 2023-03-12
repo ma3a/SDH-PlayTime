@@ -1,5 +1,5 @@
 import { Field } from "decky-frontend-lib";
-import { humanReadablePlayTime } from "../app/formatters";
+import { humanReadableTime } from "../app/formatters";
 import { PlayTimeForDay } from "../app/model";
 import { FC } from "react";
 import { DataModule } from "./DataModule";
@@ -28,8 +28,8 @@ const MonthlyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
 	const average = overall / dayTimes.length
 	return (
 		<div className="playtime-chart">
-			<Field label="Daily average" bottomSeparator="none">{humanReadablePlayTime(average, true)}</Field>
-			<Field label="Monthly overall" bottomSeparator="none">{humanReadablePlayTime(overall, true)}</Field>
+			<Field label="Daily average" bottomSeparator="none">{humanReadableTime(average, true)}</Field>
+			<Field label="Monthly overall" bottomSeparator="none">{humanReadableTime(overall, true)}</Field>
 
 			<div className="bar-by-month" style={{ width: '100%', height: 300 }}>
 				<ResponsiveContainer>

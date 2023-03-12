@@ -1,6 +1,6 @@
-export { humanReadablePlayTime, toIsoDateOnly }
+export { humanReadableTime, toIsoDateOnly }
 
-function humanReadablePlayTime(seconds: number, short: boolean = false): string {
+function humanReadableTime(seconds: number, short: boolean = false): string {
     let minutes = Math.floor(seconds / 60);
     let hours = Math.floor(minutes / 60);
 
