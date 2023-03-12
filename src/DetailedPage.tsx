@@ -208,7 +208,7 @@ export const ByWeekTab: VFC<{
 	]
 	return (
 		<div>
-			<PanelSection title="Week">
+			<PanelSection>
 				<PanelSectionRow>
 					<Pager
 						pages={weeks}
