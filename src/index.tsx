@@ -1,6 +1,6 @@
 import {
 	ButtonItem,
-	definePlugin, PanelSection, PanelSectionRow, Router,
+	definePlugin, PanelSection, PanelSectionRow,
 	ServerAPI,
 	staticClasses,
 	SteamClient
@@ -34,7 +34,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 	let sessionPlayTime = new SessionPlayTime(eventBus)
 	let settings = new Settings()
 
-	mounts.push(new SteamEventMiddleware(eventBus, clock, Router))
+	mounts.push(new SteamEventMiddleware(eventBus, clock))
 	mounts.push({
 		mount() {
 			serverApi.routerHook.addRoute(DETAILED_REPORT_ROUTE, () => <DetailedPage storage={storage} settings={settings} />)

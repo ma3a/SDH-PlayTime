@@ -8,12 +8,10 @@ class SteamEventMiddleware implements Mountable {
 
     private clock: Clock
     private eventBus: EventBus
-    private router: Router
 
-    constructor(eventBus: EventBus, clock: Clock, router: Router) {
+    constructor(eventBus: EventBus, clock: Clock) {
         this.eventBus = eventBus
         this.clock = clock
-        this.router = router
     }
 
     private activeHooks: Array<SteamHook> = []
@@ -66,10 +64,10 @@ class SteamEventMiddleware implements Mountable {
     }
 
     private fetchGameInfo(): GameCompactInfo | null {
-        if (this.router.MainRunningApp != null) {
+        if (Router.MainRunningApp != null) {
             return {
-                appId: this.router.MainRunningApp.appid,
-                name: this.router.MainRunningApp.display_name
+                appId: Router.MainRunningApp.appid,
+                name: Router.MainRunningApp.display_name
             } as GameCompactInfo
         } else {
             return null
