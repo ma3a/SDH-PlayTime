@@ -121,10 +121,7 @@ const ByMonthTab: VFC<{
 		if ((months.length - 1) - currentMonthIdx == 0) {
 			return "This month"
 		}
-		if ((months.length - 1) - currentMonthIdx == 1) {
-			return "Previous month"
-		}
-		const s = months[currentMonthIdx].startDate.toISOString().substring(5, 7)
+		const s = months[currentMonthIdx].startDate.toLocaleString('en-us', { month: 'long' })
 		return `${s}`
 	}
 	const modules = [
