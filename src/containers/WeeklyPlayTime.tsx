@@ -51,8 +51,7 @@ const WeeklyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
 					>
 						<CartesianGrid strokeDasharray="3 3" />
 						<YAxis type={"category"} dataKey="day" />
-						<XAxis type={"number"} />
-						<Legend />
+						<XAxis type={"number"} tickFormatter={(e: number) => humanReadableTime(e, true)} axisLine={false} />
 						<Bar dataKey="time" fill="#008ADA" />
 					</BarChart>
 				</ResponsiveContainer>

@@ -49,8 +49,7 @@ const MonthlyPlayTime: FC<{ data: PlayTimeForDay[] }> = (data) => {
 					>
 						<CartesianGrid strokeDasharray="3 3" />
 						<XAxis dataKey="day" />
-						<YAxis />
-						<Legend />
+						<YAxis tickFormatter={(e: number) => humanReadableTime(e, true)} axisLine={false} />
 						<Bar dataKey="time" fill="#008ADA" />
 					</BarChart>
 				</ResponsiveContainer>
