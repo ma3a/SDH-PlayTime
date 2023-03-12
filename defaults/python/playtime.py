@@ -4,7 +4,7 @@ import logging
 from storage import Storage, OldVersionException
 from functools import reduce
 
-STORE_DATA_FOR_DAYS = 21
+STORE_DATA_FOR_DAYS = 365
 """
 To not make storage a huge file and for performance reasons, limit of stored data for 3 weeks
 """
