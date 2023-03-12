@@ -133,20 +133,22 @@ const ByMonthTab: VFC<{
 		new PieModule()
 	]
 	return (
-		<PanelSection title="by week">
-			<PanelSectionRow>
-				<Pager
-					pages={months}
-					currentIdx={currentMonthIdx}
-					onNext={onNextMonth}
-					onPrev={onPrevMonth}
-					currentText={currentText}
-				></Pager>
-			</PanelSectionRow>
+		<div>
+			<PanelSection title="by week">
+				<PanelSectionRow>
+					<Pager
+						pages={months}
+						currentIdx={currentMonthIdx}
+						onNext={onNextMonth}
+						onPrev={onPrevMonth}
+						currentText={currentText}
+					></Pager>
+				</PanelSectionRow>
+			</PanelSection>
 			{
 				!isLoading && modules.map(module => module.render(playTimeForMonth))
 			}
-		</PanelSection>
+		</div>
 	)
 }
 
@@ -205,20 +207,22 @@ export const ByWeekTab: VFC<{
 		new PieModule()
 	]
 	return (
-		<PanelSection title="by week">
-			<PanelSectionRow>
-				<Pager
-					pages={weeks}
-					currentIdx={currentWeekIdx}
-					onNext={onNextWeek}
-					onPrev={onPrevWeek}
-					currentText={currentText}
-				></Pager>
-			</PanelSectionRow>
+		<div>
+			<PanelSection title="Week">
+				<PanelSectionRow>
+					<Pager
+						pages={weeks}
+						currentIdx={currentWeekIdx}
+						onNext={onNextWeek}
+						onPrev={onPrevWeek}
+						currentText={currentText}
+					></Pager>
+				</PanelSectionRow>
+			</PanelSection>
 			{
 				!isLoading && modules.map(module => module.render(playTimeForWeek))
 			}
-		</PanelSection>
+		</div>
 	)
 }
 

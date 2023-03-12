@@ -1,6 +1,7 @@
 import { Dropdown, Field, Focusable, PanelSection } from "decky-frontend-lib";
 import { useEffect, useState, VFC } from "react";
 import { ChartStyle, DEFAULTS, PlayTimeSettings, Settings } from "./app/settings";
+import { focus_panel_no_padding } from "./styles";
 
 export const SettingsPage: VFC<{
     settings: Settings,
@@ -26,7 +27,7 @@ export const SettingsPage: VFC<{
     }
 
     return (
-        <Focusable style={{ minWidth: "100%", minHeight: "100%" }}>
+        <Focusable style={{ minWidth: "100%", minHeight: "100%", ...focus_panel_no_padding }}>
             {loaded && <div style={{ marginTop: "40px", height: "calc(100% - 40px)" }}>
                 <PanelSection title="Appearance">
                     <Field label="Quick access chart types">

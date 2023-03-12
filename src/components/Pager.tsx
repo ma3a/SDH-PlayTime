@@ -1,5 +1,5 @@
 import { DialogButton, Focusable } from "decky-frontend-lib";
-import { pager_container } from "../styles";
+import { focus_panel_no_padding, pager_container } from "../styles";
 
 interface Props<T> {
     pages: T[],
@@ -20,7 +20,7 @@ export const Pager: React.FC<Props<any>> = (props) => {
         props.onPrev()
     }
     return (
-        <Focusable style={pager_container} flow-children="horizontal">
+        <Focusable style={{ ...pager_container, ...focus_panel_no_padding }} flow-children="horizontal">
             <DialogButton style={{
                 minWidth: "0px", padding: "10px 10px", width: "35px"
             }} disabled={!enablePrevButton} onClick={onPrev}>&lt;</DialogButton>

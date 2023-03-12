@@ -1,6 +1,6 @@
 import { CSSProperties } from "react";
 
-const BLUE_COLOR = "#1A9FFF"
+export const BLUE_COLOR = "#1A9FFF"
 const DARK_GREY = "#4c4c4c"
 const DEFAULT_BORDER_RADIUS = "2px"
 
@@ -9,6 +9,10 @@ export const pager_container: CSSProperties = {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center"
+}
+
+export const focus_panel_no_padding: CSSProperties = {
+    padding: "0px 0px"
 }
 
 export const hide_text_on_overflow: CSSProperties = {
