@@ -92,7 +92,7 @@ class SessionPlayTime {
             return
         }
 
-        this.eventBus.emit({ type: "CommitInterval", startedAt: this.activeInterval.startedAt, endedAt: endedAt, game: game })
+        this.eventBus.emit({ type: "CommitInterval", startedAt: this.activeInterval.startedAt, endedAt: endedAt, game: this.activeInterval.game })
         this.activeInterval = null
     }
 }

@@ -26,6 +26,13 @@ class SteamEventMiddleware implements Mountable {
         }
 
         this.activeHooks.push(SteamClient.GameSessions.RegisterForAppLifetimeNotifications((async (data: LifetimeNotification) => {
+            let game = await this.awaitGameInfo()
+            if (game == null || game == undefined) {
+                game = {
+                    appId: data.unAppID.toString(),
+                    name: ""
+                }
+            }
             if (data.bRunning) {
                 this.eventBus.emit({
                     type: "GameStarted",
