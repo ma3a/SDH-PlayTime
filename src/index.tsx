@@ -100,8 +100,8 @@ export default definePlugin((serverApi: ServerAPI) => {
 			</div>,
 		icon: <FaClock />,
 		onDismount() {
-			// It is possible that user will update or reload plugin for some reason during playtime
-			// so we will try to commit latest playtime interval
+			// It is possible that user will update or reload plugin for some reason during playtime,
+			// so we will try to commit the latest playtime interval
 			mountManager.unMount()
 		},
 	};
