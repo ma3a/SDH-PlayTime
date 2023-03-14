@@ -30,13 +30,32 @@ export default definePlugin((serverApi: ServerAPI) => {
 	let clock = systemClock
 	let eventBus = new EventBus()
 
-	let mounts: Array<Mountable> = []
+    let mountManager: {
+        mounts: Array<Mountable>
+        addMount(mount: Mountable): void,
+        mount(): void,
+        unMount(): void
+    } = {
+        mounts: [],
+        addMount(mount: Mountable) {
+            this.mounts.push(mount)
+        },
+        mount() {
+            this.mounts.forEach(mount => mount.mount())
+            eventBus.emit({ type: "Mount", createdAt: clock.getTimeMs(), mounts: this.mounts })
+        },
+        unMount() {
+            this.mounts.forEach(mount => mount.unMount())
+            eventBus.emit({ type: "Unmount", createdAt: clock.getTimeMs(), mounts: this.mounts })
+        }
+
+    }
 
 	let storage = new Storage(eventBus, serverApi)
 	let sessionPlayTime = new SessionPlayTime(eventBus)
 	let settings = new Settings()
 
-	mounts.push(new BreaksReminder(eventBus, settings, sessionPlayTime))
+	mountManager.addMount(new BreaksReminder(eventBus, settings, sessionPlayTime))
 	eventBus.addSubscriber((event) => {
 		switch (event.type) {
 			case "NotifyToTakeBreak":
@@ -53,8 +72,8 @@ export default definePlugin((serverApi: ServerAPI) => {
 				break;
 		}
 	})
-	mounts.push(new SteamEventMiddleware(eventBus, clock))
-	mounts.push({
+	mountManager.addMount(new SteamEventMiddleware(eventBus, clock))
+	mountManager.addMount({
 		mount() {
 			serverApi.routerHook.addRoute(DETAILED_REPORT_ROUTE, () => <DetailedPage storage={storage} settings={settings} />)
 		},
@@ -62,7 +81,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 			serverApi.routerHook.removeRoute(DETAILED_REPORT_ROUTE)
 		}
 	})
-	mounts.push({
+    mountManager.addMount({
 		mount() {
 			serverApi.routerHook.addRoute(SETTINGS_ROUTE, () =>
 				<SettingsPage settings={settings} />
@@ -72,10 +91,10 @@ export default definePlugin((serverApi: ServerAPI) => {
 			serverApi.routerHook.removeRoute(SETTINGS_ROUTE)
 		}
 	})
-	mounts.push(patchAppPage(serverApi, storage))
-	mounts.push(patchHomePage(serverApi, storage))
-	mounts.push(patchLibraryPage(serverApi, storage))
-	mounts.forEach((it) => { it.mount() })
+    mountManager.addMount(patchAppPage(serverApi, storage))
+    mountManager.addMount(patchHomePage(serverApi, storage))
+    mountManager.addMount(patchLibraryPage(serverApi, storage))
+	mountManager.mount()
 
 	return {
 		title: <div className={staticClasses.Title}>PlayTime</div>,
@@ -100,8 +119,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 		onDismount() {
 			// It is possible that user will update or reload plugin for some reason during playtime
 			// so we will try to commit latest playtime interval
-			eventBus.emit({ type: "Unmount", createdAt: clock.getTimeMs() })
-			mounts.forEach((it) => { it.unMount() })
+			mountManager.unMount()
 		},
 	};
 });
