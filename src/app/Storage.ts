@@ -64,10 +64,4 @@ export class Storage {
 		return this.getOverallTimesCache()
 	}
 
-	async getOverallTimeForGame(gameId: string): Promise<ServerResponse<number>> {
-		return await this.serverApi.callPluginMethod<{ game_id: string }, number>(
-			"get_overall_time_for_game",
-			{ game_id: gameId }
-		)
-	}
 }

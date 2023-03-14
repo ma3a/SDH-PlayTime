@@ -37,13 +37,13 @@ class SteamEventMiddleware implements Mountable {
                 this.eventBus.emit({
                     type: "GameStarted",
                     createdAt: this.clock.getTimeMs(),
-                    game: await this.awaitGameInfo()
+                    game: game
                 })
             } else {
                 this.eventBus.emit({
                     type: "GameStopped",
                     createdAt: this.clock.getTimeMs(),
-                    game: await this.awaitGameInfo()
+                    game: game
                 })
             }
         })))
