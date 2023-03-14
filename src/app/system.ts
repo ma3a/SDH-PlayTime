@@ -1,7 +1,7 @@
 import logger from '../utils'
 import { Events } from './events'
 
-export { Clock, EventBus, systemClock, Mountable }
+export { Clock, EventBus, MountManager, systemClock, Mountable }
 
 let systemClock = {
     getTimeMs() {
@@ -16,6 +16,30 @@ interface Clock {
 interface Mountable {
     mount: () => void,
     unMount: () => void
+}
+
+class MountManager
+{
+    private mounts: Array<Mountable> = []
+    private eventBus: EventBus
+    private clock: Clock;
+    constructor(eventBus: EventBus, clock: Clock) {
+        this.eventBus = eventBus
+        this.clock = clock;
+    }
+
+    addMount(mount: Mountable) {
+        this.mounts.push(mount)
+    }
+
+    mount() {
+        this.mounts.forEach(mount => mount.mount())
+        this.eventBus.emit({ type: "Mount", createdAt: this.clock.getTimeMs(), mounts: this.mounts })
+    }
+    unMount() {
+        this.mounts.forEach(mount => mount.unMount())
+        this.eventBus.emit({ type: "Unmount", createdAt: this.clock.getTimeMs(), mounts: this.mounts })
+    }
 }
 
 class EventBus {

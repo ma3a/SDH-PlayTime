@@ -6,7 +6,7 @@ import {
 	SteamClient
 } from "decky-frontend-lib";
 import { FaClock } from "react-icons/fa";
-import { EventBus, Mountable, systemClock } from "./app/system";
+import {EventBus, MountManager, systemClock} from "./app/system";
 import { Storage } from "./app/Storage"
 import { SteamEventMiddleware } from "./app/middleware";
 import { SessionPlayTime } from "./app/SessionPlayTime";
@@ -30,26 +30,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 	let clock = systemClock
 	let eventBus = new EventBus()
 
-    let mountManager: {
-        mounts: Array<Mountable>
-        addMount(mount: Mountable): void,
-        mount(): void,
-        unMount(): void
-    } = {
-        mounts: [],
-        addMount(mount: Mountable) {
-            this.mounts.push(mount)
-        },
-        mount() {
-            this.mounts.forEach(mount => mount.mount())
-            eventBus.emit({ type: "Mount", createdAt: clock.getTimeMs(), mounts: this.mounts })
-        },
-        unMount() {
-            this.mounts.forEach(mount => mount.unMount())
-            eventBus.emit({ type: "Unmount", createdAt: clock.getTimeMs(), mounts: this.mounts })
-        }
-
-    }
+    let mountManager = new MountManager(eventBus, clock)
 
 	let storage = new Storage(eventBus, serverApi)
 	let sessionPlayTime = new SessionPlayTime(eventBus)
@@ -75,7 +56,9 @@ export default definePlugin((serverApi: ServerAPI) => {
 	mountManager.addMount(new SteamEventMiddleware(eventBus, clock))
 	mountManager.addMount({
 		mount() {
-			serverApi.routerHook.addRoute(DETAILED_REPORT_ROUTE, () => <DetailedPage storage={storage} settings={settings} />)
+			serverApi.routerHook.addRoute(DETAILED_REPORT_ROUTE, () =>
+                <DetailedPage storage={storage} settings={settings} />
+            )
 		},
 		unMount() {
 			serverApi.routerHook.removeRoute(DETAILED_REPORT_ROUTE)
