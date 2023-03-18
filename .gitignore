@@ -47,7 +47,7 @@ yalc.lock
 
 # Ignore output folder
 
-main.py
+*.py
 
 backend/out
 build
