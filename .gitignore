@@ -36,6 +36,10 @@ dist/
 
 __pycache__/
 
+.pnpm-store/
+
+venv/
+
 /.yalc
 yalc.lock
 
@@ -43,7 +47,9 @@ yalc.lock
 
 # Ignore output folder
 
-backend/out
+main.py
 
-# Ignore python symlink
-/python
+backend/out
+build
+
+deck.json

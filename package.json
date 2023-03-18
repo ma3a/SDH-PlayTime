@@ -3,9 +3,13 @@
   "version": "1.0.0",
   "description": "PlayTime",
   "scripts": {
-    "build": "shx rm -rf dist && rollup -c",
+    "build": "shx rm -rf dist && python/entrypoint.sh && RELEASE_TYPE=production rollup -c",
+    "dev": "shx rm -rf dist && python/entrypoint.sh && RELEASE_TYPE=development rollup -c",
     "watch": "rollup -c -w",
-    "test": "jest"
+    "test": "jest",
+    "bundle": "dbuild build",
+    "package": "dbuild package",
+    "start": "dbuild deploy -r"
   },
   "keywords": [
     "decky",
@@ -15,6 +19,7 @@
     "deck"
   ],
   "devDependencies": {
+    "rollup-sourcemap-path-transform": "^1.0.3",
     "@rollup/plugin-commonjs": "^21.1.0",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.2.1",
@@ -35,7 +40,8 @@
     "shx": "^0.3.4",
     "ts-jest": "^29.0.5",
     "tslib": "^2.4.0",
-    "typescript": "^4.8.3"
+    "typescript": "^4.8.3",
+    "deckbuild": "^2.1.3"
   },
   "dependencies": {
     "decky-frontend-lib": "^3.19.2",

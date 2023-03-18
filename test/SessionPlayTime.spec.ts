@@ -1,6 +1,6 @@
-import { SessionPlayTime } from "../src/app/SessionPlayTime";
-import { EventBus } from "../src/app/system";
-import { GameCompactInfo } from "../src/app/model";
+import { SessionPlayTime } from "../src/ts/app/SessionPlayTime";
+import { EventBus } from "../src/ts/app/system";
+import { GameCompactInfo } from "../src/ts/app/model";
 
 const gameInfo_01 = {
     appId: "001",

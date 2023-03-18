@@ -1,4 +1,4 @@
-import { humanReadableTime } from "../src/app/formatters"
+import { humanReadableTime } from "../src/ts/app/formatters"
 
 describe("Should present play time as correct human readable text", () => {
     test("when zero minutes with correct plural", () => {

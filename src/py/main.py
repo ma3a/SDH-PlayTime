@@ -4,6 +4,10 @@ import os
 import sys
 from pathlib import Path
 
+from datetime import datetime
+from play_time_dao import PlayTimeDao
+from playtime import PlayTime, DATE_FORMAT
+
 log_dir = os.environ["DECKY_PLUGIN_LOG_DIR"]
 data_dir = os.environ["DECKY_PLUGIN_RUNTIME_DIR"]
 plugin_dir = Path(os.environ["DECKY_PLUGIN_DIR"])
@@ -16,17 +20,14 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def add_plugin_to_path():
-    directories = [["./"], ["python"]]
-    for dir in directories:
-        sys.path.append(str(plugin_dir.joinpath(*dir)))
+# def add_plugin_to_path():
+#     directories = [["./"], ["python"]]
+#     for dir in directories:
+#         sys.path.append(str(plugin_dir.joinpath(*dir)))
+#
+#
+# add_plugin_to_path()
 
-
-add_plugin_to_path()
-
-from datetime import datetime
-from python.play_time_dao import PlayTimeDao
-from python.playtime import PlayTime, DATE_FORMAT
 
 
 class Plugin:
