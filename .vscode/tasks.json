@@ -51,7 +51,7 @@
       "dependsOn": [
         "pnpmsetup"
       ],
-      "command": "pnpm start -r",
+      "command": "pnpm start",
       "problemMatcher": []
     },
     {
@@ -62,7 +62,7 @@
       "dependsOn": [
         "pnpmsetup"
       ],
-      "command": "pnpm start -r -d",
+      "command": "pnpm start -d",
       "problemMatcher": []
     },
     {
