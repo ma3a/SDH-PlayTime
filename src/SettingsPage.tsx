@@ -1,6 +1,7 @@
-import {Dropdown, Field, Focusable, PanelSectionRow, PanelSection, SidebarNavigation} from "decky-frontend-lib";
+import { Dropdown, Field, Focusable, PanelSectionRow, PanelSection, SidebarNavigation, ButtonItem, showModal, ConfirmModal } from "decky-frontend-lib";
 import { useEffect, useState, VFC } from "react";
-import {ChartStyle, DEFAULTS, PlayTimeSettings, Settings} from "./app/settings";
+import { MigrationResult, SteamLessTimeMigrator } from "./app/migrator";
+import { ChartStyle, DEFAULTS, PlayTimeSettings, Settings } from "./app/settings";
 import { focus_panel_no_padding } from "./styles";
 
 export const GeneralSettings: VFC<{
@@ -59,13 +60,56 @@ export const GeneralSettings: VFC<{
     );
 };
 
+export const MigrationSettings: VFC<{ steamLessTimeMigrator: SteamLessTimeMigrator }> = ({ steamLessTimeMigrator }) => {
+    const migrate = () => {
+        steamLessTimeMigrator.migrate().then(it => {
+            if (it.success) {
+                let result = it.result
+                showModal(
+                    <ConfirmModal bAlertDialog strTitle={
+                        <div>
+                            {result.status == "DONE" && "Migrated successfully"}
+                            {result.status == "ERROR" && "Unable to migrate data"}
+                            {result.status == "PARTIAL_DONE" &&
+                                "We were able to migrate some of the data"
+                            }
+                        </div>
+                    }>
+                        {result.errors.length > 0 &&
+                            <PanelSection title="Errors">
+                                {result.errors.map((it) =>
+                                    <div>{it}</div>
+                                )}
+                            </PanelSection>
+                        }
+                    </ConfirmModal>
+                )
+            }
+        })
+    }
+
+    return (
+        <Focusable style={{ minWidth: "100%", minHeight: "100%", ...focus_panel_no_padding }}>
+            <PanelSection title="SteamLessTime migration">
+                <PanelSectionRow>
+                    <ButtonItem onClick={migrate}>Migrate</ButtonItem>
+                </PanelSectionRow>
+            </PanelSection>
+        </Focusable>
+    )
+}
+
 export const SettingsPage: VFC<{
-    settings: Settings,
-}> = ({ settings }) => {
+    settings: Settings, steamLessTimeMigrator: SteamLessTimeMigrator
+}> = ({ settings, steamLessTimeMigrator }) => {
     return <SidebarNavigation pages={[
         {
             title: "General",
             content: <GeneralSettings settings={settings} />
+        },
+        {
+            title: "Migration",
+            content: <MigrationSettings steamLessTimeMigrator={steamLessTimeMigrator} />
         }
-    ]}/>
+    ]} />
 };

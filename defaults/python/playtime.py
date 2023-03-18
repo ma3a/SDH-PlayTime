@@ -104,6 +104,14 @@ class PlayTime:
                 i_started_at), length, i_game_id)
             self.dao.append_overall_time(i_game_id, length)
 
+    def add_migrated_time(self, date: datetime, length: int, game_id: str, game_name: str, migrated: str):
+        self.dao.save_game_dict(game_id, game_name)
+        self.dao.save_migrated_play_time(date, length, game_id, migrated)
+        self.dao.append_overall_time(game_id, length)
+
+    def is_already_migrated(self, game_id: str, migrated: str) -> bool:
+        return self.dao.is_migrated_for_game(game_id=game_id, migrated=migrated)
+
     def migrate_from_old_storage(self, data: str):
         data_dict = json.loads(data)["data"]
         for date_str in data_dict:

@@ -90,6 +90,20 @@ class TestPlayTimeDao(unittest.TestCase):
         self.assertEqual(result[1].game_name, "DOOM")
         self.assertEqual(result[1].time, 2000)
 
+    def test_should_ignore_migrated_in_per_day_time_report(self):
+        self.dao.save_game_dict("1001", "Zelda BOTW")
+        self.dao.save_migrated_play_time(
+            datetime(2023, 1, 1, 9, 0),
+            3600,
+            "1001",
+            "migrated-from-somewhere"
+        )
+        result = self.dao.fetch_per_day_time_report(
+            datetime(2023, 1, 1, 0, 0),
+            datetime(2023, 1, 1, 23, 59)
+        )
+        self.assertEqual(len(result), 0)
+
 
 if __name__ == '__main__':
     unittest.main()
