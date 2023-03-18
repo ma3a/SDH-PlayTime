@@ -1,28 +1,28 @@
-import { SessionPlayTime } from "./SessionPlayTime"
-import { Settings } from "./settings"
-import { EventBus, Mountable } from "./system"
+import { Settings } from './settings'
+import { EventBus, Mountable } from './system'
 
 export class BreaksReminder implements Mountable {
-
     eventBus: EventBus
     settings: Settings
-    sessionPlayTime: SessionPlayTime
     timeoutId: NodeJS.Timeout | null = null
+    sessionStaredAt: number | null = null
 
-    constructor(eventBus: EventBus, settings: Settings, sessionPlayTime: SessionPlayTime) {
+    constructor(eventBus: EventBus, settings: Settings) {
         this.eventBus = eventBus
         this.settings = settings
-        this.sessionPlayTime = sessionPlayTime
 
         let instance = this
         eventBus.addSubscriber(async (event) => {
             switch (event.type) {
-                case "GameWasRunningBefore":
-                case "GameStarted":
-                    instance.stopTimer()
-                    if (await instance.notificationsAllowed()) {
+                case 'GameWasRunningBefore':
+                case 'GameStarted':
+                    if (instance.timeoutId == null && (await instance.notificationsAllowed())) {
                         instance.setTimer()
                     }
+                    break
+                case 'GameStopped':
+                case 'Suspended':
+                    instance.stopTimer()
                     break
             }
         })
@@ -33,15 +33,22 @@ export class BreaksReminder implements Mountable {
     }
 
     private async setTimer() {
-        let timeoutMs = await (await this.settings.get()).reminderToTakeBreaksInterval * 60 * 1000
+        let timeoutMs = (await (await this.settings.get()).reminderToTakeBreaksInterval) * 60 * 1000
         let instance = this
-        this.timeoutId = setTimeout(() => { instance.onTime() }, timeoutMs)
+        this.sessionStaredAt = Date.now()
+        this.timeoutId = setTimeout(() => {
+            instance.onTime()
+        }, timeoutMs)
     }
 
     private async onTime() {
-        this.stopTimer();
-        if (await this.notificationsAllowed() || this.sessionPlayTime.isActiveInterval()) {
-            this.eventBus.emit({ type: "NotifyToTakeBreak", playTimeSeconds: this.sessionPlayTime.getPlayTime(Date.now()) })
+        this.stopTimer()
+        if (await this.notificationsAllowed()) {
+            let playedMs = Date.now() - this.sessionStaredAt!
+            this.eventBus.emit({
+                type: 'NotifyToTakeBreak',
+                playTimeSeconds: playedMs / 1000,
+            })
             this.setTimer()
         }
     }
@@ -52,7 +59,7 @@ export class BreaksReminder implements Mountable {
         }
     }
 
-    public mount() { }
+    public mount() {}
     public unMount() {
         this.stopTimer()
     }

@@ -1,17 +1,16 @@
 import logger from '../utils'
 
 import { EventBus } from './system'
-import { GameCompactInfo } from './model'
+import { Game } from './model'
 
 export { SessionPlayTime }
 
 interface ActiveInterval {
-    startedAt: number,
-    game: GameCompactInfo
+    startedAt: number
+    game: Game
 }
 
 class SessionPlayTime {
-
     private activeInterval: ActiveInterval | null = null
     private eventBus: EventBus
 
@@ -20,36 +19,41 @@ class SessionPlayTime {
         let instance = this
         eventBus.addSubscriber((event) => {
             switch (event.type) {
-                case "GameWasRunningBefore":
+                case 'GameWasRunningBefore':
                     instance.startInterval(event.createdAt, event.game)
-                    break;
+                    break
 
-                case "GameStarted":
+                case 'GameStarted':
                     instance.startInterval(event.createdAt, event.game!)
                     break
 
-                case "GameStopped":
+                case 'GameStopped':
                     instance.commitInterval(event.createdAt, event.game!)
                     break
 
-                case "Suspended":
+                case 'Suspended':
                     if (instance.activeInterval != null) {
-                        instance.commitInterval(event.createdAt, instance.activeInterval.game)
+                        instance.commitInterval(
+                            event.createdAt,
+                            instance.activeInterval.game
+                        )
                     }
-                    break;
+                    break
 
-                case "ResumeFromSuspend":
+                case 'ResumeFromSuspend':
                     if (event.game != null) {
                         instance.startInterval(event.createdAt, event.game)
                     }
-                    break;
+                    break
 
-                case "Unmount":
+                case 'Unmount':
                     if (instance.activeInterval != null)
-                        instance.commitInterval(event.createdAt, instance.activeInterval.game)
-                    break;
+                        instance.commitInterval(
+                            event.createdAt,
+                            instance.activeInterval.game
+                        )
+                    break
             }
-
         })
     }
 
@@ -64,35 +68,50 @@ class SessionPlayTime {
         return this.activeInterval != null
     }
 
-    private startInterval(startedAt: number, game: GameCompactInfo) {
-        if (this.activeInterval != null && this.activeInterval.game.appId == game.appId) {
+    private startInterval(startedAt: number, game: Game) {
+        if (
+            this.activeInterval != null &&
+            this.activeInterval.game.id == game.id
+        ) {
             logger.error(`Getting same game start interval, ignoring it`)
             return
         }
-        if (this.activeInterval != null && this.activeInterval.game.appId != game.appId) {
-            logger.error(`Interval already started but for the different game ` +
-                `['${this.activeInterval.game.appId}', '${this.activeInterval.game.name}'] -> [['${game.appId}', '${game.name}']];`)
+        if (
+            this.activeInterval != null &&
+            this.activeInterval.game.id != game.id
+        ) {
+            logger.error(
+                `Interval already started but for the different game ` +
+                    `['${this.activeInterval.game.id}', '${this.activeInterval.game.name}'] -> [['${game.id}', '${game.name}']];`
+            )
             this.activeInterval = null
         }
 
         this.activeInterval = {
             startedAt: startedAt,
-            game: game
+            game: game,
         } as ActiveInterval
     }
 
-    private commitInterval(endedAt: number, game: GameCompactInfo) {
+    private commitInterval(endedAt: number, game: Game) {
         if (this.activeInterval == null) {
-            logger.error("There is no active interval, ignoring commit")
+            logger.error('There is no active interval, ignoring commit')
             return
         }
-        if (this.activeInterval.game.appId != game.appId) {
-            logger.error(`Could not commit interval with different games:`
-                + ` ['${this.activeInterval.game.appId}', '${this.activeInterval.game.name}'] -> [['${game.appId}', '${game.name}']] `)
+        if (this.activeInterval.game.id != game.id) {
+            logger.error(
+                `Could not commit interval with different games:` +
+                    ` ['${this.activeInterval.game.id}', '${this.activeInterval.game.name}'] -> [['${game.id}', '${game.name}']] `
+            )
             return
         }
 
-        this.eventBus.emit({ type: "CommitInterval", startedAt: this.activeInterval.startedAt, endedAt: endedAt, game: this.activeInterval.game })
+        this.eventBus.emit({
+            type: 'CommitInterval',
+            startedAt: this.activeInterval.startedAt,
+            endedAt: endedAt,
+            game: this.activeInterval.game,
+        })
         this.activeInterval = null
     }
 }

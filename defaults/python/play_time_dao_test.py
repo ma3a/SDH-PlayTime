@@ -34,15 +34,6 @@ class TestPlayTimeDao(unittest.TestCase):
         self.assertEqual(result[0], "1001")
         self.assertEqual(result[1], "Zelda BOTW - updated")
 
-    def test_should_add_time_to_existing_game_in_overall_time(self):
-        self.dao.append_overall_time("1001", 3600)
-        self.dao.append_overall_time("1001", 1800)
-
-        result = sqlite3.connect(self.database).execute(
-            "select game_id, duration from overall_time").fetchone()
-        self.assertEqual(result[0], "1001")
-        self.assertEqual(result[1], 5400)
-
     def test_should_add_new_interval(self):
         self.dao.save_game_dict("1001", "Zelda BOTW")
         self.dao.save_play_time(
@@ -90,19 +81,36 @@ class TestPlayTimeDao(unittest.TestCase):
         self.assertEqual(result[1].game_name, "DOOM")
         self.assertEqual(result[1].time, 2000)
 
-    def test_should_ignore_migrated_in_per_day_time_report(self):
+    def test_should_manually_added_playtime_for_tracked_game(self):
         self.dao.save_game_dict("1001", "Zelda BOTW")
-        self.dao.save_migrated_play_time(
-            datetime(2023, 1, 1, 9, 0),
-            3600,
-            "1001",
-            "migrated-from-somewhere"
+        self.dao.save_play_time(datetime(2023, 1, 1, 11, 0), 1800, "1001")
+        self.dao.apply_manual_time_for_game(
+            create_at=datetime.now(),
+            game_id="1001",
+            game_name="Zelda BOTW",
+            new_overall_time=3600,
+            source="manually-added_time"
         )
-        result = self.dao.fetch_per_day_time_report(
-            datetime(2023, 1, 1, 0, 0),
-            datetime(2023, 1, 1, 23, 59)
+
+        self.assertEquals(self._get_overall_time_for_game("1001"), 3600)
+
+    def test_should_manually_added_playtime_for_not_tracked_game(self):
+        self.dao.save_game_dict("1001", "Zelda BOTW")
+        self.dao.apply_manual_time_for_game(
+            create_at=datetime.now(),
+            game_id="1001",
+            game_name="Zelda BOTW",
+            new_overall_time=3600,
+            source="manually-added-time"
         )
-        self.assertEqual(len(result), 0)
+
+        self.assertEquals(self._get_overall_time_for_game("1001"), 3600)
+
+    def _get_overall_time_for_game(self, game_id: str):
+        return list(
+            filter(
+                lambda x: x.game_id == game_id,
+                self.dao.fetch_overall_playtime()))[0].time
 
 
 if __name__ == '__main__':

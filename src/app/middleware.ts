@@ -1,11 +1,10 @@
-import { Router, sleep } from "decky-frontend-lib"
-import { GameCompactInfo } from "./model"
-import { Clock, EventBus, Mountable } from "./system"
+import { Router, sleep } from 'decky-frontend-lib'
+import { Game } from './model'
+import { Clock, EventBus, Mountable } from './system'
 
 export { SteamEventMiddleware }
 
 class SteamEventMiddleware implements Mountable {
-
     private clock: Clock
     private eventBus: EventBus
 
@@ -19,63 +18,73 @@ class SteamEventMiddleware implements Mountable {
     public mount() {
         if (this.fetchGameInfo() != null) {
             this.eventBus.emit({
-                type: "GameWasRunningBefore",
+                type: 'GameWasRunningBefore',
                 createdAt: this.clock.getTimeMs(),
-                game: this.fetchGameInfo()!
+                game: this.fetchGameInfo()!,
             })
         }
 
-        this.activeHooks.push(SteamClient.GameSessions.RegisterForAppLifetimeNotifications((async (data: LifetimeNotification) => {
-            let game = await this.awaitGameInfo()
-            if (game == null || game == undefined) {
-                game = {
-                    appId: data.unAppID.toString(),
-                    name: ""
+        this.activeHooks.push(
+            SteamClient.GameSessions.RegisterForAppLifetimeNotifications(
+                async (data: LifetimeNotification) => {
+                    let game = await this.awaitGameInfo()
+                    if (game == null || game == undefined) {
+                        game = {
+                            id: data.unAppID.toString(),
+                            name: '',
+                        }
+                    }
+                    if (data.bRunning) {
+                        this.eventBus.emit({
+                            type: 'GameStarted',
+                            createdAt: this.clock.getTimeMs(),
+                            game: game,
+                        })
+                    } else {
+                        this.eventBus.emit({
+                            type: 'GameStopped',
+                            createdAt: this.clock.getTimeMs(),
+                            game: game,
+                        })
+                    }
                 }
-            }
-            if (data.bRunning) {
-                this.eventBus.emit({
-                    type: "GameStarted",
-                    createdAt: this.clock.getTimeMs(),
-                    game: game
-                })
-            } else {
-                this.eventBus.emit({
-                    type: "GameStopped",
-                    createdAt: this.clock.getTimeMs(),
-                    game: game
-                })
-            }
-        })))
+            )
+        )
 
-        this.activeHooks.push(SteamClient.System.RegisterForOnSuspendRequest(async () => {
-            this.eventBus.emit({
-                type: "Suspended",
-                createdAt: this.clock.getTimeMs(),
-                game: await this.fetchGameInfo()
+        this.activeHooks.push(
+            SteamClient.System.RegisterForOnSuspendRequest(async () => {
+                this.eventBus.emit({
+                    type: 'Suspended',
+                    createdAt: this.clock.getTimeMs(),
+                    game: await this.fetchGameInfo(),
+                })
             })
-        }))
+        )
 
-        this.activeHooks.push(SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
-            this.eventBus.emit({
-                type: "ResumeFromSuspend",
-                createdAt: this.clock.getTimeMs(),
-                game: await this.fetchGameInfo()
+        this.activeHooks.push(
+            SteamClient.System.RegisterForOnResumeFromSuspend(async () => {
+                this.eventBus.emit({
+                    type: 'ResumeFromSuspend',
+                    createdAt: this.clock.getTimeMs(),
+                    game: await this.fetchGameInfo(),
+                })
             })
-        }))
+        )
     }
 
-    private async awaitGameInfo(): Promise<GameCompactInfo> {
-        await waitForPredicate(4, 200, async () => { return this.fetchGameInfo() != null })
-        return this.fetchGameInfo()!;
+    private async awaitGameInfo(): Promise<Game> {
+        await waitForPredicate(4, 200, async () => {
+            return this.fetchGameInfo() != null
+        })
+        return this.fetchGameInfo()!
     }
 
-    private fetchGameInfo(): GameCompactInfo | null {
+    private fetchGameInfo(): Game | null {
         if (Router.MainRunningApp != null) {
             return {
-                appId: Router.MainRunningApp.appid,
-                name: Router.MainRunningApp.display_name
-            } as GameCompactInfo
+                id: Router.MainRunningApp.appid,
+                name: Router.MainRunningApp.display_name,
+            } as Game
         } else {
             return null
         }
@@ -86,33 +95,36 @@ class SteamEventMiddleware implements Mountable {
     }
 }
 
-async function waitForPredicate(retries: number, delay: number, predicate: () => (boolean | Promise<boolean>)): Promise<boolean> {
+async function waitForPredicate(
+    retries: number,
+    delay: number,
+    predicate: () => boolean | Promise<boolean>
+): Promise<boolean> {
     const waitImpl = async (): Promise<boolean> => {
         try {
-            let tries = retries + 1;
+            let tries = retries + 1
             while (tries-- !== 0) {
                 if (await predicate()) {
-                    return true;
+                    return true
                 }
                 if (tries > 0) {
-                    await sleep(delay);
+                    await sleep(delay)
                 }
             }
         } catch (error) {
-            console.error(error);
+            console.error(error)
         }
 
-        return false;
-    };
+        return false
+    }
 
-    return await waitImpl();
+    return await waitImpl()
 }
 
-
 interface LifetimeNotification {
-    unAppID: number;
-    nInstanceID: string;
-    bRunning: boolean;
+    unAppID: number
+    nInstanceID: string
+    bRunning: boolean
 }
 
 interface SteamHook {
