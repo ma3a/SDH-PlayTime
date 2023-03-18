@@ -1,17 +1,18 @@
-export { humanReadableTime, toIsoDateOnly }
+import { Interval } from './reports'
 
-function humanReadableTime(seconds: number, short: boolean = false): string {
-    let minutes = Math.floor(seconds / 60);
-    let hours = Math.floor(minutes / 60);
+export { humanReadableTime, toIsoDateOnly, formatMonthInterval, formatWeekInterval }
 
-    let plurals = function (value: number, nonplural: string) {
+function humanReadableTime(seconds: number, short: boolean = true): string {
+    let minutes = Math.floor(seconds / 60)
+    let hours = Math.floor(minutes / 60)
+
+    let plurals = function (value: number, nonPlural: string) {
         if (value == 1) {
-            return nonplural
-        }
-        else return nonplural + "s"
+            return nonPlural
+        } else return nonPlural + 's'
     }
 
-    let result = ""
+    let result = ''
     if (short) {
         if (hours > 0) {
             result += `${hours}h `
@@ -19,15 +20,31 @@ function humanReadableTime(seconds: number, short: boolean = false): string {
         result += `${minutes % 60}m`
         return result
     } else {
-
         if (hours > 0) {
-            result += `${hours} ${plurals(hours, "hour")} `
+            result += `${hours} ${plurals(hours, 'hour')} `
         }
-        result += `${minutes % 60} ${plurals(minutes % 60, "minute")}`
+        result += `${minutes % 60} ${plurals(minutes % 60, 'minute')}`
     }
     return result
 }
 
 function toIsoDateOnly(date: Date) {
-    return date.toISOString().substring(0, 10)
+    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+}
+
+function formatMonthInterval(interval: Interval) {
+    return interval.start.toLocaleDateString('en-us', {
+        month: 'long',
+        year: 'numeric',
+    })
+}
+
+function formatWeekInterval(interval: Interval) {
+    return `${interval.start.toLocaleDateString('en-us', {
+        day: '2-digit',
+        month: 'long',
+    })} - ${interval.end.toLocaleDateString('en-us', {
+        day: '2-digit',
+        month: 'long',
+    })}`
 }

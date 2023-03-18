@@ -39,7 +39,7 @@ prepare_dist:
 zip: all
 	cd ./build/$(PLUGIN_DIR)-$(PLUGIN_VERSION) && zip -r ../$(ZIP_NAME) ./$(PLUGIN_DIR)
 
-deploy: all create_dir_on_deck fix_permissions1 copy_distr_on_deck fix_permissions2
+deploy: all create_dir_on_deck fix_permissions1 copy_distr_on_deck fix_permissions2 restart_plugin_loader
 
 create_dir_on_deck:
 	ssh deck@$(DECK_IP) -p $(DECK_PORT) $(DECK_SSH_KEY) 'mkdir -p $(DECK_USER_HOMEDIR)/homebrew/pluginloader && mkdir -p $(DECK_USER_HOMEDIR)/homebrew/plugins'
@@ -49,3 +49,7 @@ copy_distr_on_deck:
 
 fix_permissions1 fix_permissions2:
 	ssh deck@$(DECK_IP) -p $(DECK_PORT) $(DECK_SSH_KEY) 'echo '$(DECK_PASS)' | sudo -S chmod -R 755 $(DECK_USER_HOMEDIR)/homebrew/'
+
+restart_plugin_loader:
+	ssh deck@$(DECK_IP) -p $(DECK_PORT) $(DECK_SSH_KEY) 'echo '$(DECK_PASS)' | sudo -S systemctl restart plugin_loader.service'
+

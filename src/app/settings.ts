@@ -1,10 +1,9 @@
-import logger from "../utils";
+import logger from '../utils'
 
 declare global {
     // @ts-ignore
-    let SteamClient: SteamClient;
+    let SteamClient: SteamClient
 }
-
 
 export interface PlayTimeSettings {
     gameChartStyle: ChartStyle
@@ -12,27 +11,26 @@ export interface PlayTimeSettings {
 }
 
 export enum ChartStyle {
-    PIE, BAR
+    PIE_AND_BARS,
+    BAR,
 }
 
-let PLAY_TIME_SETTINGS_KEY = "decky-loader-SDH-Playtime";
+let PLAY_TIME_SETTINGS_KEY = 'decky-loader-SDH-Playtime'
 export let DEFAULTS: PlayTimeSettings = {
     gameChartStyle: ChartStyle.BAR,
-    reminderToTakeBreaksInterval: -1
+    reminderToTakeBreaksInterval: -1,
 }
 
 export class Settings {
-
     constructor() {
-        SteamClient.Storage.GetJSON(PLAY_TIME_SETTINGS_KEY)
-            .catch((e: any) => {
-                if (e.message = "Not found") {
-                    logger.error("Unable to get settings, saving defaults", e)
-                    SteamClient.Storage.SetObject(PLAY_TIME_SETTINGS_KEY, DEFAULTS)
-                } else {
-                    logger.error("Unable to get settings", e)
-                }
-            })
+        SteamClient.Storage.GetJSON(PLAY_TIME_SETTINGS_KEY).catch((e: any) => {
+            if ((e.message = 'Not found')) {
+                logger.error('Unable to get settings, saving defaults', e)
+                SteamClient.Storage.SetObject(PLAY_TIME_SETTINGS_KEY, DEFAULTS)
+            } else {
+                logger.error('Unable to get settings', e)
+            }
+        })
     }
 
     async get(): Promise<PlayTimeSettings> {
@@ -40,7 +38,7 @@ export class Settings {
         if (settings == undefined) {
             return DEFAULTS
         }
-        return JSON.parse(settings) as PlayTimeSettings;
+        return JSON.parse(settings) as PlayTimeSettings
     }
 
     async save(data: PlayTimeSettings) {
