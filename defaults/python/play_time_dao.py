@@ -41,9 +41,23 @@ class PlayTimeDao:
     def save_play_time(self, start: datetime.datetime, time_s: int, game_id: str):
         with self._in_transaction() as con:
             con.execute(
-                "INSERT INTO play_time(date_time, duration, game_id) VALUES (?,?,?)",
-                (start.isoformat(), time_s, game_id)
+                "INSERT INTO play_time(date_time, duration, game_id, migrated) VALUES (?,?,?,?)",
+                (start.isoformat(), time_s, game_id, None)
             )
+
+    def save_migrated_play_time(self, start: datetime.datetime, time_s: int, game_id: str, migrated: str):
+        with self._in_transaction() as con:
+            con.execute(
+                "INSERT INTO play_time(date_time, duration, game_id, migrated) VALUES (?,?,?,?)",
+                (start.isoformat(), time_s, game_id, migrated)
+            )
+
+    def is_migrated_for_game(self, game_id: str, migrated: str) -> bool:
+        with self._in_transaction() as con:
+            return con.execute(
+                "SELECT count(1) FROM play_time WHERE game_id = ? and migrated = ?",
+                (game_id, migrated)
+            ).fetchone()[0] > 0
 
     def append_overall_time(self, game_id: str, delta_time_s: int):
         with self._in_transaction() as con:
@@ -75,13 +89,14 @@ class PlayTimeDao:
             return con.execute(
                 """
                 SELECT STRFTIME('%Y-%m-%d', UNIXEPOCH(date_time), 'unixepoch') AS date,
-                    pt.game_id                                                 AS game_id,
-                    gd.name                                                    AS game_name,
-                    SUM(duration)                                              AS time
+                    pt.game_id                                              AS game_id,
+                    gd.name                                                 AS game_name,
+                    SUM(duration)                                           AS time
                 FROM play_time pt
                         LEFT JOIN game_dict gd ON pt.game_id = gd.game_id
-                WHERE UNIXEPOCH(date_time) BETWEEN UNIXEPOCH(:begin) AND 
-                                                   UNIXEPOCH(:end)
+                WHERE UNIXEPOCH(date_time) BETWEEN UNIXEPOCH(:begin) AND
+                    UNIXEPOCH(:end)
+                AND migrated IS NULL
 
                 GROUP BY STRFTIME('%Y-%m-%d', UNIXEPOCH(date), 'unixepoch'), pt.game_id, gd.name;
                 """,
@@ -111,6 +126,9 @@ class PlayTimeDao:
                     "CREATE INDEX play_time_date_time_epoch_idx ON play_time(UNIXEPOCH(date_time));",
                     "CREATE INDEX play_time_game_id_idx         ON play_time(game_id);",
                     "CREATE INDEX overall_time_game_id_idx      ON overall_time(game_id);"
+                ]),
+                (3, [
+                    "ALTER TABLE play_time ADD COLUMN migrated TEXT"
                 ])
             ]
         )

@@ -6,7 +6,7 @@ import {
 	SteamClient
 } from "decky-frontend-lib";
 import { FaClock } from "react-icons/fa";
-import {EventBus, MountManager, systemClock} from "./app/system";
+import { EventBus, MountManager, systemClock } from "./app/system";
 import { Storage } from "./app/Storage"
 import { SteamEventMiddleware } from "./app/middleware";
 import { SessionPlayTime } from "./app/SessionPlayTime";
@@ -19,6 +19,7 @@ import { SettingsPage } from "./SettingsPage";
 import { navigateToPage, DETAILED_REPORT_ROUTE, SETTINGS_ROUTE } from "./navigation";
 import { BreaksReminder } from "./app/notification";
 import { humanReadableTime } from "./app/formatters";
+import { SteamLessTimeMigrator } from "./app/migrator";
 
 declare global {
 	// @ts-ignore
@@ -30,11 +31,12 @@ export default definePlugin((serverApi: ServerAPI) => {
 	let clock = systemClock
 	let eventBus = new EventBus()
 
-    let mountManager = new MountManager(eventBus, clock)
+	let mountManager = new MountManager(eventBus, clock)
 
 	let storage = new Storage(eventBus, serverApi)
 	let sessionPlayTime = new SessionPlayTime(eventBus)
 	let settings = new Settings()
+	let steamLessTimeMigrator = new SteamLessTimeMigrator(serverApi)
 
 	mountManager.addMount(new BreaksReminder(eventBus, settings, sessionPlayTime))
 	eventBus.addSubscriber((event) => {
@@ -57,26 +59,26 @@ export default definePlugin((serverApi: ServerAPI) => {
 	mountManager.addMount({
 		mount() {
 			serverApi.routerHook.addRoute(DETAILED_REPORT_ROUTE, () =>
-                <DetailedPage storage={storage} settings={settings} />
-            )
+				<DetailedPage storage={storage} settings={settings} />
+			)
 		},
 		unMount() {
 			serverApi.routerHook.removeRoute(DETAILED_REPORT_ROUTE)
 		}
 	})
-    mountManager.addMount({
+	mountManager.addMount({
 		mount() {
 			serverApi.routerHook.addRoute(SETTINGS_ROUTE, () =>
-				<SettingsPage settings={settings} />
+				<SettingsPage settings={settings} steamLessTimeMigrator={steamLessTimeMigrator} />
 			)
 		},
 		unMount() {
 			serverApi.routerHook.removeRoute(SETTINGS_ROUTE)
 		}
 	})
-    mountManager.addMount(patchAppPage(serverApi, storage))
-    mountManager.addMount(patchHomePage(serverApi, storage))
-    mountManager.addMount(patchLibraryPage(serverApi, storage))
+	mountManager.addMount(patchAppPage(serverApi, storage))
+	mountManager.addMount(patchHomePage(serverApi, storage))
+	mountManager.addMount(patchLibraryPage(serverApi, storage))
 	mountManager.mount()
 
 	return {
