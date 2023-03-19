@@ -33,6 +33,7 @@ Thumbs.db
 
 # Ignore built ts files
 dist/
+build/
 
 __pycache__/
 
