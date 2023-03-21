@@ -8,6 +8,7 @@ DECK_SSH_KEY := $(shell node -p "require('./.vscode/settings.json').deckkey")
 DECK_USER_HOMEDIR := $(shell node -p "require('./.vscode/settings.json').deckdir")
 
 BUILD_DIR:= ./build/$(PLUGIN_DIR)-$(PLUGIN_VERSION)/$(PLUGIN_DIR)
+ZIP_NAME:= $(PLUGIN_DIR)-$(PLUGIN_VERSION).zip
 
 all: pnpm_setup prepare_dist
 pnpm_setup:
@@ -34,6 +35,9 @@ prepare_dist:
 		--exclude '__pycache__' \
 		--include '*.py' \
 		./defaults/ $(BUILD_DIR)
+
+zip: all
+	cd ./build/$(PLUGIN_DIR)-$(PLUGIN_VERSION) && zip -r ../$(ZIP_NAME) ./$(PLUGIN_DIR)
 
 deploy: all create_dir_on_deck fix_permissions1 copy_distr_on_deck fix_permissions2
 
