@@ -11,3 +11,6 @@ Or manually by running:
 ```shell
 make deploy
 ```
+
+## Dev Requirements:
+* pnpm > 8.x.x
