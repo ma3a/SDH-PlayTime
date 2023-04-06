@@ -45,15 +45,19 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Storage): Mountable 
 				const overview: AppOverview = ret1.props.children.props.overview;
 				const details: AppDetails = ret1.props.children.props.details;
 				const app_id: number = overview.appid;
+
+				// just getting value - it fixes blinking issue
+				details.nPlaytimeForever
 				if (overview.app_type == 1073741824) {
 					const times = storage.getOverallTimesCache()
-
 					if (details && times) {
 						runInAction(() => {
 							details.nPlaytimeForever = +(times[`${app_id}`] / 60.0).toFixed(1);
 						});
 					}
 				}
+				// just getting value - it fixes blinking issue
+				details.nPlaytimeForever
 				return ret1;
 			}
 		)
@@ -65,10 +69,11 @@ export function patchHomePage(serverAPI: ServerAPI, storage: Storage): Mountable
 	return routePatch(serverAPI, "/library/home", (props: { path: string, children: ReactElement }) => {
 		wrapReactType(props.children.type);
 		afterPatch(
-			props.children,
-			"type",
+			props.children.props,
+			"renderFunc",
 			(_, ret1) => {
 				updatePlaytimes(storage)
+				ret1.key = Math.random();
 				return ret1;
 			}
 		)
