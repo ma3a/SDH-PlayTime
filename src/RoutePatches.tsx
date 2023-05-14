@@ -68,11 +68,13 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Storage): Mountable 
 export function patchHomePage(serverAPI: ServerAPI, storage: Storage): Mountable {
 	return routePatch(serverAPI, "/library/home", (props: { path: string, children: ReactElement }) => {
 		wrapReactType(props.children.type);
-        afterPatch(props.children, 'type', (_: Record<string, unknown>[], ret?: any) =>
-                {
+        afterPatch(
+            props.children,
+            "type",
+            (_: Record<string, unknown>[], ret1?: any) => {
 				updatePlaytimes(storage)
-				ret.key = Math.random();
-				return ret;
+				ret1.key = Math.random();
+				return ret1;
 			}
 		)
 		return props;
