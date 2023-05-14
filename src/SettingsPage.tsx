@@ -1,6 +1,6 @@
 import { Dropdown, Field, Focusable, PanelSectionRow, PanelSection, SidebarNavigation, ButtonItem, showModal, ConfirmModal } from "decky-frontend-lib";
 import { useEffect, useState, VFC } from "react";
-import { MigrationResult, SteamLessTimeMigrator } from "./app/migrator";
+import { SteamLessTimeMigrator } from "./app/migrator";
 import { ChartStyle, DEFAULTS, PlayTimeSettings, Settings } from "./app/settings";
 import { focus_panel_no_padding } from "./styles";
 
