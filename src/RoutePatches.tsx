@@ -4,12 +4,15 @@ import { AppDetails, AppOverview } from "./app/model";
 import { Mountable } from "./app/system";
 import { Storage } from "./app/Storage";
 import { runInAction } from "mobx";
+//import logger from './utils'
 
 export function updatePlaytimes(storage: Storage) {
 	storage.getOverallTimes().then(times => {
+		//logger.info("Setting playtimes to app store overviews...");
 		Object.entries(times).forEach(([gameId, time]) => {
-			let overview = appStore.GetAppOverviewByAppID(+gameId)
-			if (overview) {
+			let overview = appStore.GetAppOverviewByGameID(gameId);
+			if (overview?.app_type == 1073741824) {
+				//logger.info(`Setting playtime for ${overview.display_name} (${gameId}) to ${time}`);
 				overview.minutes_playtime_forever = (time / 60.0).toFixed(1);
 			}
 		});
@@ -19,7 +22,7 @@ export function updatePlaytimes(storage: Storage) {
 export function updatePlaytime(storage: Storage, appId: number) {
 	storage.getOverallTimes().then(times => {
 		let overview = appStore.GetAppOverviewByAppID(appId)
-		if (overview) {
+		if (overview?.app_type == 1073741824) {
 			overview.minutes_playtime_forever = (times[`${appId}`] / 60.0).toFixed(1);
 		}
 	});
@@ -68,11 +71,12 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Storage): Mountable 
 export function patchHomePage(serverAPI: ServerAPI, storage: Storage): Mountable {
 	return routePatch(serverAPI, "/library/home", (props: { path: string, children: ReactElement }) => {
 		wrapReactType(props.children.type);
-        afterPatch(
-            props.children,
-            "type",
-            (_: Record<string, unknown>[], ret1?: any) => {
-				updatePlaytimes(storage)
+		afterPatch(
+			props.children,
+			"type",
+			(_: Record<string, unknown>[], ret1?: any) => {
+				//console.info('ret1', ret1);
+				updatePlaytimes(storage);
 				ret1.key = Math.random();
 				return ret1;
 			}
@@ -83,7 +87,6 @@ export function patchHomePage(serverAPI: ServerAPI, storage: Storage): Mountable
 
 export function patchLibraryPage(serverAPI: ServerAPI, storage: Storage): Mountable {
 	return routePatch(serverAPI, "/library", (props: { path: string, children: ReactElement }) => {
-
 		wrapReactType(props.children.type);
 		afterPatch(
 			props.children,
