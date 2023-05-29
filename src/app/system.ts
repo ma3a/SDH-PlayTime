@@ -18,11 +18,11 @@ interface Mountable {
     unMount: () => void
 }
 
-class MountManager
-{
+class MountManager {
     private mounts: Array<Mountable> = []
     private eventBus: EventBus
     private clock: Clock;
+
     constructor(eventBus: EventBus, clock: Clock) {
         this.eventBus = eventBus
         this.clock = clock;
@@ -36,6 +36,7 @@ class MountManager
         this.mounts.forEach(mount => mount.mount())
         this.eventBus.emit({ type: "Mount", createdAt: this.clock.getTimeMs(), mounts: this.mounts })
     }
+
     unMount() {
         this.mounts.forEach(mount => mount.unMount())
         this.eventBus.emit({ type: "Unmount", createdAt: this.clock.getTimeMs(), mounts: this.mounts })
@@ -43,11 +44,10 @@ class MountManager
 }
 
 class EventBus {
-
     private subscribers: ((event: Events) => void)[] = []
 
     public emit(event: Events) {
-        logger.info("New event", event)
+        logger.debug("New event", event)
         this.subscribers.forEach((it) => { it(event) })
     }
 

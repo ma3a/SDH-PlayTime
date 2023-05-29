@@ -1,8 +1,9 @@
 import { Router, sleep } from "decky-frontend-lib"
 import { GameCompactInfo } from "./model"
 import { Clock, EventBus, Mountable } from "./system"
+import { SteamPatchesHook } from "./SteamPatchesHook"
 
-export { SteamEventMiddleware }
+export { SteamEventMiddleware, SteamHook }
 
 class SteamEventMiddleware implements Mountable {
 
@@ -24,6 +25,36 @@ class SteamEventMiddleware implements Mountable {
                 game: this.fetchGameInfo()!
             })
         }
+
+        // hook login state (user login/logout)
+        this.activeHooks.push(SteamClient.User.RegisterForLoginStateChange((username: string) => {
+            if (username) {
+                this.eventBus.emit({
+                    type: "UserLoggedIn",
+                    createdAt: this.clock.getTimeMs(),
+                    username: username
+                });
+            } else {
+                this.eventBus.emit({
+                    type: "UserLoggedOut",
+                    createdAt: this.clock.getTimeMs()
+                })
+            }
+        }));
+
+        // hook app overview changes (not used atm)
+        this.activeHooks.push(SteamClient.Apps.RegisterForAppOverviewChanges((_: ArrayBuffer) => {
+            //logger.debug('AppOverviewChanges proto', _);
+            this.eventBus.emit({
+                type: "AppOverviewChanged",
+                createdAt: this.clock.getTimeMs()
+            });
+        }));
+
+        // patch steam methods so we can overwrite time played
+        let steamPatchesHook = new SteamPatchesHook(this.eventBus, this.clock);
+        steamPatchesHook.init()
+        this.activeHooks.push(steamPatchesHook);
 
         this.activeHooks.push(SteamClient.GameSessions.RegisterForAppLifetimeNotifications((async (data: LifetimeNotification) => {
             let game = await this.awaitGameInfo()
@@ -52,7 +83,7 @@ class SteamEventMiddleware implements Mountable {
             this.eventBus.emit({
                 type: "Suspended",
                 createdAt: this.clock.getTimeMs(),
-                game: await this.fetchGameInfo()
+                game: this.fetchGameInfo()
             })
         }))
 
@@ -60,7 +91,7 @@ class SteamEventMiddleware implements Mountable {
             this.eventBus.emit({
                 type: "ResumeFromSuspend",
                 createdAt: this.clock.getTimeMs(),
-                game: await this.fetchGameInfo()
+                game: this.fetchGameInfo()
             })
         }))
     }
@@ -107,7 +138,6 @@ async function waitForPredicate(retries: number, delay: number, predicate: () =>
 
     return await waitImpl();
 }
-
 
 interface LifetimeNotification {
     unAppID: number;

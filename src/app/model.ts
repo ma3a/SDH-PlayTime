@@ -1,4 +1,4 @@
-export { GameCompactInfo, PlayTimeForDay, GameWithPlayTime, OverallPlayTimes, AppOverview, AppDetails, AppAchievements, AppAchievement, AppLanguages, AppStore }
+export { GameCompactInfo, PlayTimeForDay, GameWithPlayTime, OverallPlayTimes, AppOverview, AppDetails, AppAchievements, AppAchievement, AppLanguages, AppStore, AppInfoStore }
 
 interface GameCompactInfo {
 	appId: string,
@@ -23,6 +23,8 @@ interface OverallPlayTimes {
 
 interface AppOverview {
 	__proto__: any;
+	InitFromProto: any;
+	OriginalInitFromProto: any;
 	"appid": number,
 	"display_name": string,
 	"app_type": number,
@@ -237,5 +239,11 @@ interface AppStore {
 	GetCustomLandcapeImageURLs: any,
 	GetCustomHeroImageURLs: any,
 	GetCustomLogoImageURLs: any,
-	GetStorePageURLForApp: any
+	GetStorePageURLForApp: any,
+	m_mapApps: any
+}
+
+interface AppInfoStore {
+	OnAppOverviewChange: any,
+	OriginalOnAppOverviewChange: any,
 }

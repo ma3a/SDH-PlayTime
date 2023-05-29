@@ -6,7 +6,7 @@ import { EventBus } from "./system";
 
 export class Storage {
 	private serverApi: ServerAPI
-	private overallCache: OverallPlayTimes = {} as OverallPlayTimes
+	private overallCache: OverallPlayTimes | null = null;
 
 	constructor(eventBus: EventBus, serverApi: ServerAPI) {
 		this.serverApi = serverApi
@@ -18,7 +18,7 @@ export class Storage {
 					break
 			}
 		})
-		instance.updateCache();
+		this.updateCache();
 	}
 
 	private async saveInterval(startedAt: number, endedAt: number, game: GameCompactInfo) {
@@ -45,23 +45,27 @@ export class Storage {
 		)
 	}
 
-	private async updateCache() {
+	private async updateCache(): Promise<OverallPlayTimes> {
 		let that = this
-		this.serverApi.callPluginMethod<{}, OverallPlayTimes>(
-			"get_overall_times",
-			{}
-		).then((r) =>
-			that.overallCache = r.result as OverallPlayTimes
-		)
+		return new Promise<OverallPlayTimes>(resolve => {
+			this.serverApi.callPluginMethod<{}, OverallPlayTimes>(
+				"get_overall_times",
+				{}
+			).then((r) => {
+				that.overallCache = r.result as OverallPlayTimes
+				//logger.trace("updateCache()")
+				resolve(that.overallCache)
+			})
+		})
 	}
 
 	getOverallTimesCache(): OverallPlayTimes {
-		return this.overallCache
+		//logger.trace("getOverallTimesCache", this.overallCache ? "[]" : "null")
+		return this.overallCache!
 	}
 
 	async getOverallTimes(): Promise<OverallPlayTimes> {
-		await this.updateCache();
-		return this.getOverallTimesCache()
+		return this.updateCache()
 	}
 
 }

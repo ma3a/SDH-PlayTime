@@ -11,7 +11,7 @@ import { Storage } from "./app/Storage"
 import { SteamEventMiddleware } from "./app/middleware";
 import { SessionPlayTime } from "./app/SessionPlayTime";
 import { patchAppPage, patchHomePage, patchLibraryPage } from "./RoutePatches";
-import { AppStore } from "./app/model";
+import { AppStore, AppInfoStore } from "./app/model";
 import { DetailedPage } from "./DetailedPage";
 import { Settings } from "./app/settings";
 import { Content } from "./App";
@@ -20,11 +20,13 @@ import { navigateToPage, DETAILED_REPORT_ROUTE, SETTINGS_ROUTE } from "./navigat
 import { BreaksReminder } from "./app/notification";
 import { humanReadableTime } from "./app/formatters";
 import { SteamLessTimeMigrator } from "./app/migrator";
+import { SteamLifecycle } from "./app/SteamLifecycle";
 
 declare global {
 	// @ts-ignore
 	let SteamClient: SteamClient;
 	let appStore: AppStore;
+	let appInfoStore: AppInfoStore;
 }
 
 export default definePlugin((serverApi: ServerAPI) => {
@@ -56,6 +58,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 		}
 	})
 	mountManager.addMount(new SteamEventMiddleware(eventBus, clock))
+	mountManager.addMount(new SteamLifecycle(eventBus, storage))
 	mountManager.addMount({
 		mount() {
 			serverApi.routerHook.addRoute(DETAILED_REPORT_ROUTE, () =>
@@ -77,8 +80,8 @@ export default definePlugin((serverApi: ServerAPI) => {
 		}
 	})
 	mountManager.addMount(patchAppPage(serverApi, storage))
-	mountManager.addMount(patchHomePage(serverApi, storage))
-	mountManager.addMount(patchLibraryPage(serverApi, storage))
+	//mountManager.addMount(patchHomePage(serverApi, storage))
+	//mountManager.addMount(patchLibraryPage(serverApi, storage))
 	mountManager.mount()
 
 	return {
