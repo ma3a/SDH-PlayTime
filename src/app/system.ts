@@ -34,6 +34,7 @@ class MountManager {
     private mounts: Array<Mountable> = []
     private eventBus: EventBus
     private clock: Clock
+
     constructor(eventBus: EventBus, clock: Clock) {
         this.eventBus = eventBus
         this.clock = clock
@@ -51,6 +52,7 @@ class MountManager {
             mounts: this.mounts,
         })
     }
+
     unMount() {
         this.mounts.forEach((mount) => mount.unMount())
         this.eventBus.emit({

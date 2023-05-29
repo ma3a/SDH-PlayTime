@@ -28,6 +28,7 @@ declare global {
     // @ts-ignore
     let SteamClient: SteamClient
     let appStore: AppStore
+    let appInfoStore: AppInfoStore
 }
 
 export default definePlugin((serverApi: ServerAPI) => {
@@ -184,5 +185,7 @@ function createMountables(
     mounts.push(patchAppPage(serverApi, backend))
     mounts.push(patchHomePage(serverApi, backend))
     mounts.push(patchLibraryPage(serverApi, backend))
+    mounts.push(new SteamPatches(storage))
+    mounts.push(new SteamLifecycle(eventBus, storage))
     return mounts
 }

@@ -2,7 +2,7 @@ import { Router, sleep } from 'decky-frontend-lib'
 import { Game } from './model'
 import { Clock, EventBus, Mountable } from './system'
 
-export { SteamEventMiddleware }
+export { SteamEventMiddleware, SteamHook }
 
 class SteamEventMiddleware implements Mountable {
     private clock: Clock
@@ -23,6 +23,22 @@ class SteamEventMiddleware implements Mountable {
                 game: this.fetchGameInfo()!,
             })
         }
+
+        // hook login state (user login/logout)
+        this.activeHooks.push(SteamClient.User.RegisterForLoginStateChange((username: string) => {
+            if (username) {
+                this.eventBus.emit({
+                    type: "UserLoggedIn",
+                    createdAt: this.clock.getTimeMs(),
+                    username: username
+                });
+            } else {
+                this.eventBus.emit({
+                    type: "UserLoggedOut",
+                    createdAt: this.clock.getTimeMs()
+                })
+            }
+        }));
 
         this.activeHooks.push(
             SteamClient.GameSessions.RegisterForAppLifetimeNotifications(
