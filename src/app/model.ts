@@ -50,6 +50,8 @@ function convertDailyStatisticsToGameWithTime(data: DailyStatistics[]): GameWith
 interface AppOverview {
     __proto__: any
     appid: number
+    InitFromProto: any;
+    OriginalInitFromProto: any;
     display_name: string
     app_type: number
     mru_index: number
@@ -264,4 +266,10 @@ interface AppStore {
     GetCustomHeroImageURLs: any
     GetCustomLogoImageURLs: any
     GetStorePageURLForApp: any
+    m_mapApps: any
+}
+
+interface AppInfoStore {
+    OnAppOverviewChange: any,
+    OriginalOnAppOverviewChange: any,
 }

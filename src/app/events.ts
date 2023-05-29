@@ -12,4 +12,6 @@ export type Events =
     | { type: 'CommitInterval'; startedAt: number; endedAt: number; game: Game }
     | { type: 'NotifyToTakeBreak'; playTimeSeconds: number }
     | { type: 'NotifyAboutError'; message: string }
+    | { type: "UserLoggedIn", createdAt: number, username: string }
+    | { type: "UserLoggedOut", createdAt: number }
     | { type: 'TimeManuallyAdjusted' }

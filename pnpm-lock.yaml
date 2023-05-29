@@ -33,6 +33,9 @@ devDependencies:
   '@types/jest':
     specifier: ^29.0.3
     version: 29.4.0
+  '@types/lodash-es':
+    specifier: ^4.14.184
+    version: 4.17.0
   '@types/lodash.isequal':
     specifier: ^4.5.6
     version: 4.5.6
@@ -57,6 +60,9 @@ devDependencies:
   jest:
     specifier: ^29.0.3
     version: 29.5.0(@types/node@18.15.0)
+  lodash-es:
+    specifier: ^4.17.21
+    version: 4.17.21
   mobx:
     specifier: '5'
     version: 5.15.7
@@ -990,6 +996,12 @@ packages:
 
   /@types/json-schema@7.0.11:
     resolution: {integrity: sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==}
+    dev: true
+
+  /@types/lodash-es@4.17.0:
+    resolution: {integrity: sha512-h8lkWQSgT4qjs9PcIhcL2nWubZeXRVzjZxYlRFmcX9BW1PIk5qRc0djtRWZqtM+GDDFhwBt0ztRu72D/YxIcEw==}
+    dependencies:
+      '@types/lodash': 4.14.191
     dev: true
 
   /@types/lodash.isequal@4.5.6:
@@ -2888,6 +2900,10 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       p-locate: 5.0.0
+    dev: true
+
+  /lodash-es@4.17.21:
+    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
     dev: true
 
   /lodash.memoize@4.1.2:
