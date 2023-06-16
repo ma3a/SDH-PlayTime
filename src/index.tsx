@@ -10,7 +10,7 @@ import { EventBus, MountManager, systemClock } from "./app/system";
 import { Storage } from "./app/Storage"
 import { SteamEventMiddleware } from "./app/middleware";
 import { SessionPlayTime } from "./app/SessionPlayTime";
-import { patchAppPage, patchHomePage, patchLibraryPage } from "./RoutePatches";
+import { patchAppPage } from "./RoutePatches";
 import { AppStore, AppInfoStore } from "./app/model";
 import { DetailedPage } from "./DetailedPage";
 import { Settings } from "./app/settings";
@@ -21,6 +21,7 @@ import { BreaksReminder } from "./app/notification";
 import { humanReadableTime } from "./app/formatters";
 import { SteamLessTimeMigrator } from "./app/migrator";
 import { SteamLifecycle } from "./app/SteamLifecycle";
+import { SteamPatches } from "./app/SteamPatches";
 
 declare global {
 	// @ts-ignore
@@ -58,6 +59,7 @@ export default definePlugin((serverApi: ServerAPI) => {
 		}
 	})
 	mountManager.addMount(new SteamEventMiddleware(eventBus, clock))
+	mountManager.addMount(new SteamPatches(storage))
 	mountManager.addMount(new SteamLifecycle(eventBus, storage))
 	mountManager.addMount({
 		mount() {
@@ -80,8 +82,6 @@ export default definePlugin((serverApi: ServerAPI) => {
 		}
 	})
 	mountManager.addMount(patchAppPage(serverApi, storage))
-	//mountManager.addMount(patchHomePage(serverApi, storage))
-	//mountManager.addMount(patchLibraryPage(serverApi, storage))
 	mountManager.mount()
 
 	return {

@@ -11,8 +11,5 @@ export type Events =
     | { type: "Mount", createdAt: number, mounts: Mountable[] }
     | { type: "CommitInterval", startedAt: number, endedAt: number, game: GameCompactInfo }
     | { type: "NotifyToTakeBreak", playTimeSeconds: number }
-    | { type: "AppOverviewChanged", createdAt: number }
-    | { type: "AppInfoStore.OnAppOverviewChange", createdAt: number, appIds: Array<number> | null }
-    | { type: "AppStore.m_mapApps.set", createdAt: number, appId: number, appOverview: any }
     | { type: "UserLoggedIn", createdAt: number, username: string }
     | { type: "UserLoggedOut", createdAt: number }

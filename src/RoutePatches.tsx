@@ -1,5 +1,5 @@
 import { debounce } from "lodash-es";
-import { afterPatch, RoutePatch, ServerAPI, wrapReactType } from "decky-frontend-lib";
+import { afterPatch, RoutePatch, ServerAPI } from "decky-frontend-lib";
 import { ReactElement } from "react";
 import { AppDetails, AppOverview, OverallPlayTimes } from "./app/model";
 import { Mountable } from "./app/system";
@@ -7,8 +7,7 @@ import { Storage } from "./app/Storage";
 import { runInAction } from "mobx";
 import logger from './utils'
 
-//export const updatePlaytimesDelayedDebounced = debounce((storage: Storage, cached: boolean = false) => delay(() => updatePlaytimes(storage, cached), 50, storage), 1000, { leading: true, trailing: false });
-export const updatePlaytimesDebounced = debounce((storage: Storage, cached: boolean = false) => updatePlaytimes(storage, cached), 1000, { leading: true, trailing: false });
+//export const updatePlaytimesDebounced = debounce((storage: Storage, cached: boolean = false) => updatePlaytimes(storage, cached), 1000, { leading: true, trailing: false });
 
 export function updatePlaytimes(storage: Storage, cached: boolean = false) {
 	let doUpdatePlayTimes = (times: OverallPlayTimes) => {
@@ -33,6 +32,7 @@ export function updatePlaytimes(storage: Storage, cached: boolean = false) {
 	}
 }
 
+// not used, delete?
 export function updatePlaytimesForAppIds(storage: Storage, appIds: Array<number>, cached: boolean = false) {
 	if (!appIds) return;
 	let doUpdatePlaytimesForAppIds = (times: OverallPlayTimes, appIds: Array<number>) => {
@@ -77,20 +77,23 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Storage): Mountable 
 			(_, ret1) => {
 				const overview: AppOverview = ret1.props.children.props.overview;
 				const details: AppDetails = ret1.props.children.props.details;
-				const app_id: number = overview.appid;
+				const appId: number = overview.appid;
 
-				// just getting value - it fixes blinking issue
-				details.nPlaytimeForever
 				if (overview.app_type == 1073741824) {
 					const times = storage.getOverallTimesCache()
-					if (details && times) {
-						runInAction(() => {
-							details.nPlaytimeForever = +(times[`${app_id}`] / 60.0).toFixed(1);
-						});
-					}
+					let time = times ? times[`${appId}`] : null
+					if (details && time) {
+						//logger.info(`Setting playtime for ${details.strDisplayName} (${appId}) to ${time}`);
+						debounce((details: AppDetails, time: number) => {
+							details?.nPlaytimeForever; // just getting value - it fixes blinking issue ???
+							runInAction(() => {
+								details && (details.nPlaytimeForever = +(time / 60.0).toFixed(1));
+							});
+							details?.nPlaytimeForever; // just getting value - it fixes blinking issue ???
+						}, 75, { leading: false, trailing: true })
+							(details, time);
+					};
 				}
-				// just getting value - it fixes blinking issue
-				details.nPlaytimeForever
 				return ret1;
 			}
 		)
@@ -98,36 +101,3 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Storage): Mountable 
 	});
 }
 
-export function patchHomePage(serverAPI: ServerAPI, storage: Storage): Mountable {
-	return routePatch(serverAPI, "/library/home", (props: { path: string, children: ReactElement }) => {
-		wrapReactType(props.children.type);
-		afterPatch(
-			props.children,
-			"type",
-			(_: Record<string, unknown>[], ret1?: any) => {
-				//console.info('ret1', ret1);
-				//updatePlaytimes(storage, true);
-				//ret1.key = Math.random();
-				return ret1;
-			}
-		)
-		return props;
-	});
-}
-
-export function patchLibraryPage(serverAPI: ServerAPI, storage: Storage): Mountable {
-	return routePatch(serverAPI, "/library", (props: { path: string, children: ReactElement }) => {
-		wrapReactType(props.children.type);
-		afterPatch(
-			props.children,
-			"type",
-			(_, ret1) => {
-				//console.info('ret1', ret1);
-				//updatePlaytimes(storage, true);
-				//ret1.key = Math.random();
-				return ret1;
-			}
-		)
-		return props;
-	});
-}

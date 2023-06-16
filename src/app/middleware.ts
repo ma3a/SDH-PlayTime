@@ -1,7 +1,6 @@
 import { Router, sleep } from "decky-frontend-lib"
 import { GameCompactInfo } from "./model"
 import { Clock, EventBus, Mountable } from "./system"
-import { SteamPatchesHook } from "./SteamPatchesHook"
 
 export { SteamEventMiddleware, SteamHook }
 
@@ -41,20 +40,6 @@ class SteamEventMiddleware implements Mountable {
                 })
             }
         }));
-
-        // hook app overview changes (not used atm)
-        this.activeHooks.push(SteamClient.Apps.RegisterForAppOverviewChanges((_: ArrayBuffer) => {
-            //logger.debug('AppOverviewChanges proto', _);
-            this.eventBus.emit({
-                type: "AppOverviewChanged",
-                createdAt: this.clock.getTimeMs()
-            });
-        }));
-
-        // patch steam methods so we can overwrite time played
-        let steamPatchesHook = new SteamPatchesHook(this.eventBus, this.clock);
-        steamPatchesHook.init()
-        this.activeHooks.push(steamPatchesHook);
 
         this.activeHooks.push(SteamClient.GameSessions.RegisterForAppLifetimeNotifications((async (data: LifetimeNotification) => {
             let game = await this.awaitGameInfo()
