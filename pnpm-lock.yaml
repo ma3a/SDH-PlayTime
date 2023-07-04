@@ -2,8 +2,8 @@ lockfileVersion: '6.0'
 
 dependencies:
   decky-frontend-lib:
-    specifier: ^3.21.0
-    version: 3.21.0
+    specifier: ^3.21.8
+    version: 3.21.8
   prop-types:
     specifier: ^15.6.0
     version: 15.8.1
@@ -1740,8 +1740,8 @@ packages:
     resolution: {integrity: sha512-qIMFpTMZmny+MMIitAB6D7iVPEorVw6YQRWkvarTkT4tBeSLLiHzcwj6q0MmYSFCiVpiqPJTJEYIrpcPzVEIvg==}
     dev: false
 
-  /decky-frontend-lib@3.21.0:
-    resolution: {integrity: sha512-BZY+F9HKhjF0zthoBdQxbluZ/37UyjlzCCpcC6dQfOeAAPmjFDATs/FF/n9qo9B+NMepgWUXpStZR0becE9EOw==}
+  /decky-frontend-lib@3.21.8:
+    resolution: {integrity: sha512-I45KWzoTSakUcsN7drHhiOc+rYKYygIsuYTHqc8DbpPDJvUx6xlU4t7D2TMrj9o/xS/V3WY9N/pX8eF6AcGT1g==}
     dev: false
 
   /dedent@0.7.0:
