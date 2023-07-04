@@ -70,7 +70,7 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Storage): Mountable 
 
 export function patchHomePage(serverAPI: ServerAPI, storage: Storage): Mountable {
 	return routePatch(serverAPI, "/library/home", (props: { path: string, children: ReactElement }) => {
-		wrapReactType(props.children.type);
+//		wrapReactType(props.children.type);
 		afterPatch(
 			props.children,
 			"type",
@@ -87,7 +87,7 @@ export function patchHomePage(serverAPI: ServerAPI, storage: Storage): Mountable
 
 export function patchLibraryPage(serverAPI: ServerAPI, storage: Storage): Mountable {
 	return routePatch(serverAPI, "/library", (props: { path: string, children: ReactElement }) => {
-		wrapReactType(props.children.type);
+//		wrapReactType(props.children.type);
 		afterPatch(
 			props.children,
 			"type",
