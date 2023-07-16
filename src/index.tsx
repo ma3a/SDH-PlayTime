@@ -4,8 +4,7 @@ import { Clock, EventBus, Mountable, MountManager, systemClock } from './app/sys
 import { Backend } from './app/backend'
 import { SteamEventMiddleware } from './app/middleware'
 import { SessionPlayTime } from './app/SessionPlayTime'
-import { patchAppPage, patchHomePage, patchLibraryPage } from './steam-ui/patches'
-import { AppStore } from './app/model'
+import { AppInfoStore, AppStore } from './app/model'
 import { DetailedPage } from './pages/ReportPage'
 import { Settings } from './app/settings'
 import { SettingsPage } from './pages/SettingsPage'
@@ -23,6 +22,9 @@ import { Reports } from './app/reports'
 import { TimeManipulation } from './app/time-manipulation'
 import { SteamlessTimeMigrationPage } from './pages/SteamlessTimeMigrationPage'
 import { ManuallyAdjustTimePage } from './pages/ManuallyAdjustTimePage'
+import { SteamPatches } from './steam-ui/SteamPatches'
+import { SteamLifecycle } from './steam-ui/SteamLifecycle'
+import { patchAppPage } from './steam-ui/patches'
 
 declare global {
     // @ts-ignore
@@ -183,9 +185,7 @@ function createMountables(
         },
     })
     mounts.push(patchAppPage(serverApi, backend))
-    mounts.push(patchHomePage(serverApi, backend))
-    mounts.push(patchLibraryPage(serverApi, backend))
-    mounts.push(new SteamPatches(storage))
-    mounts.push(new SteamLifecycle(eventBus, storage))
+    mounts.push(new SteamPatches(backend))
+    mounts.push(new SteamLifecycle(eventBus, backend))
     return mounts
 }
