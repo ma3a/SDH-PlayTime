@@ -121,7 +121,8 @@ export const SteamlessTimeMigrationPage: VFC = () => {
                         </div>
 
                         {tableRows.map((row, idx) => (
-                            <div
+                            <Focusable
+                                flow-children="horizontal"
                                 style={{
                                     gridTemplateColumns: '20% 15% 25% 15% 15%',
                                     ...TableCSS.table__row,
@@ -132,28 +133,24 @@ export const SteamlessTimeMigrationPage: VFC = () => {
                                 <div>
                                     {humanReadableTime(row.steamlessTimeTrackedSec)}
                                 </div>
-                                <div>
-                                    <Dropdown
-                                        rgOptions={gameOptions}
-                                        selectedOption={row.appId}
-                                        onChange={(e) => onGameChange(idx, e.data)}
-                                    />
-                                </div>
+                                <Dropdown
+                                    rgOptions={gameOptions}
+                                    selectedOption={row.appId}
+                                    onChange={(e) => onGameChange(idx, e.data)}
+                                />
                                 <div>
                                     {map(row.playTimeTrackedSec, (it) =>
                                         humanReadableTime(it)
                                     )}
                                 </div>
-                                <div>
-                                    <TextField
-                                        mustBeNumeric
-                                        value={row.desiredHours?.toFixed(2)?.toString()}
-                                        onChange={(e) =>
-                                            onDesiredHoursChange(idx, e.target.value)
-                                        }
-                                    />
-                                </div>
-                            </div>
+                                <TextField
+                                    mustBeNumeric
+                                    value={row.desiredHours?.toFixed(2)?.toString()}
+                                    onChange={(e) =>
+                                        onDesiredHoursChange(idx, e.target.value)
+                                    }
+                                />
+                            </Focusable>
                         ))}
                     </div>
                 </PanelSection>
