@@ -1,7 +1,7 @@
 import { VFC, useEffect, useState } from 'react'
 import { DailyStatistics, convertDailyStatisticsToGameWithTime } from '../app/model'
 import { useLocator } from '../locator'
-import { Paginated } from '../app/reports'
+import { Paginated, empty } from '../app/reports'
 import { Pager } from '../components/Pager'
 import { WeekView } from '../components/statistics/WeekView'
 import { ChartStyle } from '../app/settings'
@@ -14,9 +14,7 @@ import { PanelSection } from 'decky-frontend-lib'
 export const ReportWeekly: VFC = () => {
     const { reports, currentSettings: settings } = useLocator()
     const [isLoading, setLoading] = useState<Boolean>(false)
-    const [currentPage, setCurrentPage] = useState<Paginated<DailyStatistics> | null>(
-        null
-    )
+    const [currentPage, setCurrentPage] = useState<Paginated<DailyStatistics>>(empty())
 
     useEffect(() => {
         setLoading(true)
@@ -40,13 +38,6 @@ export const ReportWeekly: VFC = () => {
             setLoading(false)
         })
     }
-    if (isLoading) {
-        return <div>Loading...</div>
-    }
-    if (!currentPage) {
-        return <div>Error while loading data</div>
-    }
-
     return (
         <div>
             <Pager
@@ -56,21 +47,27 @@ export const ReportWeekly: VFC = () => {
                 hasNext={currentPage.hasNext()}
                 hasPrev={currentPage.hasPrev()}
             />
-
-            <AverageAndOverall statistics={currentPage.current().data} />
-            <PanelSection title="By day">
-                <WeekView statistics={currentPage.current().data} />
-            </PanelSection>
-            <PanelSection title="By game">
-                <GamesTimeBarView
-                    data={convertDailyStatisticsToGameWithTime(
-                        currentPage.current().data
-                    )}
-                />
-                {settings.gameChartStyle == ChartStyle.PIE_AND_BARS && (
-                    <PieView statistics={currentPage.current().data} />
-                )}
-            </PanelSection>
+            {isLoading && <div>Loading...</div>}
+            {!isLoading && !currentPage && <div>Error while loading data</div>}
+            {!isLoading && currentPage && (
+                <div>
+                    {' '}
+                    <AverageAndOverall statistics={currentPage.current().data} />
+                    <PanelSection title="By day">
+                        <WeekView statistics={currentPage.current().data} />
+                    </PanelSection>
+                    <PanelSection title="By game">
+                        <GamesTimeBarView
+                            data={convertDailyStatisticsToGameWithTime(
+                                currentPage.current().data
+                            )}
+                        />
+                        {settings.gameChartStyle == ChartStyle.PIE_AND_BARS && (
+                            <PieView statistics={currentPage.current().data} />
+                        )}
+                    </PanelSection>
+                </div>
+            )}
         </div>
     )
 }

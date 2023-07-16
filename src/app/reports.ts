@@ -27,6 +27,16 @@ export interface Paginated<T> {
     current(): Page<T>
 }
 
+export function empty<T>() {
+    return {
+        next: async () => empty<T>(),
+        hasNext: () => false,
+        prev: async () => empty<T>(),
+        hasPrev: () => false,
+        current: () => ({ data: [], interval: { start: new Date(), end: new Date() } }),
+    }
+}
+
 export enum IntervalType {
     Weekly,
     Monthly,

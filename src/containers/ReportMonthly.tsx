@@ -1,6 +1,6 @@
 import { VFC, useEffect, useState } from 'react'
 import { useLocator } from '../locator'
-import { Paginated } from '../app/reports'
+import { Paginated, empty } from '../app/reports'
 import { DailyStatistics, convertDailyStatisticsToGameWithTime } from '../app/model'
 import { Pager } from '../components/Pager'
 import { AverageAndOverall } from '../components/statistics/AverageAndOverall'
@@ -14,9 +14,7 @@ import { GamesTimeBarView } from '../components/statistics/GamesTimeBarView'
 export const ReportMonthly: VFC = () => {
     const { reports, currentSettings: settings } = useLocator()
     const [isLoading, setLoading] = useState<Boolean>(false)
-    const [currentPage, setCurrentPage] = useState<Paginated<DailyStatistics> | null>(
-        null
-    )
+    const [currentPage, setCurrentPage] = useState<Paginated<DailyStatistics>>(empty())
 
     useEffect(() => {
         setLoading(true)
@@ -40,12 +38,6 @@ export const ReportMonthly: VFC = () => {
             setLoading(false)
         })
     }
-    if (isLoading) {
-        return <div>Loading...</div>
-    }
-    if (!currentPage) {
-        return <div>Error while loading data</div>
-    }
     return (
         <div>
             <PanelSection>
@@ -59,13 +51,21 @@ export const ReportMonthly: VFC = () => {
                     />
                 </PanelSectionRow>
             </PanelSection>
-            <AverageAndOverall statistics={currentPage.current().data} />
-            <MonthView statistics={currentPage.current().data} />
-            <GamesTimeBarView
-                data={convertDailyStatisticsToGameWithTime(currentPage.current().data)}
-            />
-            {settings.gameChartStyle == ChartStyle.PIE_AND_BARS && (
-                <PieView statistics={currentPage.current().data} />
+            {isLoading && <div>Loading...</div>}
+            {!isLoading && !currentPage && <div>Error while loading data</div>}
+            {!isLoading && currentPage && (
+                <div>
+                    <AverageAndOverall statistics={currentPage.current().data} />
+                    <MonthView statistics={currentPage.current().data} />
+                    <GamesTimeBarView
+                        data={convertDailyStatisticsToGameWithTime(
+                            currentPage.current().data
+                        )}
+                    />
+                    {settings.gameChartStyle == ChartStyle.PIE_AND_BARS && (
+                        <PieView statistics={currentPage.current().data} />
+                    )}
+                </div>
             )}
         </div>
     )
