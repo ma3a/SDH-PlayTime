@@ -10,6 +10,7 @@ export {
     AppStore,
     SteamLessStatistics,
     convertDailyStatisticsToGameWithTime,
+    AppInfoStore,
 }
 
 interface Game {
@@ -50,8 +51,8 @@ function convertDailyStatisticsToGameWithTime(data: DailyStatistics[]): GameWith
 interface AppOverview {
     __proto__: any
     appid: number
-    InitFromProto: any;
-    OriginalInitFromProto: any;
+    InitFromProto: any
+    OriginalInitFromProto: any
     display_name: string
     app_type: number
     mru_index: number
@@ -270,6 +271,6 @@ interface AppStore {
 }
 
 interface AppInfoStore {
-    OnAppOverviewChange: any,
-    OriginalOnAppOverviewChange: any,
+    OnAppOverviewChange: any
+    OriginalOnAppOverviewChange: any
 }

@@ -12,7 +12,6 @@ export const debug = (...args: any[]) => {
         `%c PlayTime %c`,
         'background: #16a085; color: black;',
         'background: #1abc9c; color: black;',
-        'color: blue;',
         ...args
     )
 }

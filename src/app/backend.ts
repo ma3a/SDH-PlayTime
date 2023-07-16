@@ -16,22 +16,19 @@ export interface StatisticForIntervalResponse {
 
 export class Backend {
     private serverApi: ServerAPI
-    private overallCache: OverallPlayTimes = {} as OverallPlayTimes
     private eventBus: EventBus
 
     constructor(eventBus: EventBus, serverApi: ServerAPI) {
         this.eventBus = eventBus
         this.serverApi = serverApi
         let instance = this
-        this.updateCache()
         eventBus.addSubscriber(async (event) => {
             switch (event.type) {
                 case 'CommitInterval':
                     await instance.addTime(event.startedAt, event.endedAt, event.game)
-                    instance.updateCache()
                     break
+
                 case 'TimeManuallyAdjusted':
-                    instance.updateCache()
                     break
             }
         })
@@ -165,24 +162,5 @@ export class Backend {
             type: 'NotifyAboutError',
             message: message,
         })
-    }
-
-    private async updateCache() {
-        let that = this
-        this.serverApi
-            .callPluginMethod<{}, GameWithTime[]>('per_game_overall_statistics', {})
-            .then((r) => {
-                if (r.success) {
-                    let result = {} as OverallPlayTimes
-                    for (let el of r.result) {
-                        result[el.game.id] = el.time
-                    }
-                    that.overallCache = result
-                }
-            })
-    }
-
-    getOverallTimesCache(): OverallPlayTimes {
-        return this.overallCache
     }
 }

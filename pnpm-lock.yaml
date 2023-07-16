@@ -2,8 +2,8 @@ lockfileVersion: '6.0'
 
 dependencies:
   decky-frontend-lib:
-    specifier: ^3.21.0
-    version: 3.21.0
+    specifier: ^3.21.8
+    version: 3.21.8
   prop-types:
     specifier: ^15.6.0
     version: 15.8.1
