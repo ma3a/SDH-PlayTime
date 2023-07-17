@@ -18,12 +18,12 @@ Alternatively, you can build PlayTime from source by following these steps:
 
 1. Clone the PlayTime repository:
    ```shell
-   git clone https://github.com/your-username/PlayTime.git
+   git clone https://github.com/ma3a/SDH-PlayTime.git
    ```
 
 2. Navigate to the project directory:
    ```shell
-   cd PlayTime
+   cd SDH-PlayTime
    ```
 
 3. Install the development dependencies using `pnpm`:
