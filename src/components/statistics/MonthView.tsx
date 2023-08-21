@@ -3,6 +3,7 @@ import { DailyStatistics } from '../../app/model'
 import { humanReadableTime } from '../../app/formatters'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 import { FocusableExt } from '../FocusableExt'
+import moment from 'moment'
 
 interface DayTime {
     time: number
@@ -11,11 +12,9 @@ interface DayTime {
 
 export const MonthView: FC<{ statistics: DailyStatistics[] }> = (props) => {
     let dayTimes = props.statistics.map((it) => {
-        let date = new Date()
-        date.setTime(Date.parse(it.date))
         return {
             time: it.total,
-            date: date,
+            date: moment(it.date).toDate(),
         } as DayTime
     })
     return (

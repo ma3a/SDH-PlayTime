@@ -2,7 +2,7 @@ import { afterPatch, RoutePatch, ServerAPI } from 'decky-frontend-lib'
 import { ReactElement } from 'react'
 import { AppDetails, AppOverview, GameWithTime } from '../app/model'
 import { Mountable } from '../app/system'
-import { Backend } from '../app/backend'
+import { Cache } from '../app/cache'
 import { runInAction } from 'mobx'
 
 function routePatch(serverAPI: ServerAPI, path: string, patch: RoutePatch): Mountable {
@@ -16,11 +16,10 @@ function routePatch(serverAPI: ServerAPI, path: string, patch: RoutePatch): Moun
     }
 }
 
-export function patchAppPage(serverAPI: ServerAPI, storage: Backend): Mountable {
-    let cachedApps = new Map<string, number>()
-    storage.fetchPerGameOverallStatistics().then((times) => {
-        cachedApps = convertGameWithTimesToMap(times)
-    })
+export function patchAppPage(
+    serverAPI: ServerAPI,
+    timeCache: Cache<Map<string, number>>
+): Mountable {
     return routePatch(
         serverAPI,
         '/library/app/:appid',
@@ -33,9 +32,9 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Backend): Mountable 
                 // just getting value - it fixes blinking issue
                 details.nPlaytimeForever
                 if (overview.app_type == 1073741824) {
-                    if (details && cachedApps) {
+                    if (details && timeCache.isReady()) {
                         runInAction(() => {
-                            let time = cachedApps.get(app_id.toString()) || 0
+                            let time = timeCache.get()!.get(app_id.toString()) || 0
                             details.nPlaytimeForever = +(time / 60.0).toFixed(1)
                         })
                     }
@@ -47,12 +46,4 @@ export function patchAppPage(serverAPI: ServerAPI, storage: Backend): Mountable 
             return props
         }
     )
-}
-
-function convertGameWithTimesToMap(times: GameWithTime[]): Map<string, number> {
-    let map = new Map<string, number>()
-    times.forEach((time) => {
-        map.set(time.game.id, time.time)
-    })
-    return map
 }

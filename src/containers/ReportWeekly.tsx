@@ -38,6 +38,15 @@ export const ReportWeekly: VFC = () => {
             setLoading(false)
         })
     }
+
+    const data = currentPage.current().data
+    const isAnyGames =
+        data
+            .map((it) => {
+                return it.games.length
+            })
+            .reduce((a, b) => a + b, 0) > 0
+
     return (
         <div>
             <Pager
@@ -51,21 +60,20 @@ export const ReportWeekly: VFC = () => {
             {!isLoading && !currentPage && <div>Error while loading data</div>}
             {!isLoading && currentPage && (
                 <div>
-                    {' '}
-                    <AverageAndOverall statistics={currentPage.current().data} />
+                    <AverageAndOverall statistics={data} />
                     <PanelSection title="By day">
-                        <WeekView statistics={currentPage.current().data} />
+                        <WeekView statistics={data} />
                     </PanelSection>
-                    <PanelSection title="By game">
-                        <GamesTimeBarView
-                            data={convertDailyStatisticsToGameWithTime(
-                                currentPage.current().data
+                    {isAnyGames && (
+                        <PanelSection title="By game">
+                            <GamesTimeBarView
+                                data={convertDailyStatisticsToGameWithTime(data)}
+                            />
+                            {settings.gameChartStyle == ChartStyle.PIE_AND_BARS && (
+                                <PieView statistics={data} />
                             )}
-                        />
-                        {settings.gameChartStyle == ChartStyle.PIE_AND_BARS && (
-                            <PieView statistics={currentPage.current().data} />
-                        )}
-                    </PanelSection>
+                        </PanelSection>
+                    )}
                 </div>
             )}
         </div>
