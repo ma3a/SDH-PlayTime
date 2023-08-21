@@ -1,5 +1,6 @@
 import { Backend } from './backend'
 import { DailyStatistics, GameWithTime } from './model'
+import moment from 'moment'
 
 export interface Interval {
     start: Date
@@ -73,25 +74,25 @@ class PerDayPaginatedImpl implements Paginated<DailyStatistics> {
     private intervalPager: IntervalPager
     private data: DailyStatistics[]
     private hasPrevPage: boolean
-    private hasNextPage: boolean
 
     private constructor(
         backend: Backend,
         intervalPager: IntervalPager,
         data: DailyStatistics[],
-        hasPrevPage: boolean,
-        hasNextPage: boolean
+        hasPrevPage: boolean
     ) {
         this.backend = backend
         this.intervalPager = intervalPager
         this.data = data
-        this.hasNextPage = hasNextPage
         this.hasPrevPage = hasPrevPage
     }
 
     hasNext(): boolean {
-        return this.hasNextPage
+        const nextInterval = this.intervalPager.next().current()
+        const today = new Date()
+        return nextInterval.start <= today
     }
+
     hasPrev(): boolean {
         return this.hasPrevPage
     }
@@ -104,13 +105,7 @@ class PerDayPaginatedImpl implements Paginated<DailyStatistics> {
             intervalPager.current().start,
             intervalPager.current().end
         )
-        return new PerDayPaginatedImpl(
-            backend,
-            intervalPager,
-            data.data,
-            data.hasPrev,
-            data.hasNext
-        )
+        return new PerDayPaginatedImpl(backend, intervalPager, data.data, data.hasPrev)
     }
 
     next(): Promise<Paginated<DailyStatistics>> {
@@ -184,35 +179,18 @@ export class IntervalPagerImpl {
     }
 }
 
-function startOfDay(date: Date): Date {
-    const dt = new Date(date)
-    return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate())
-}
-
-function endOfDay(date: Date): Date {
-    const dt = new Date(date)
-    return new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), 23, 59, 59)
-}
-
 function startOfWeek(date: Date): Date {
-    const dt = new Date(date)
-    const day = dt.getDay()
-    const diff = dt.getDate() - day + (day === 0 ? -6 : 1)
-    return startOfDay(new Date(dt.setDate(diff)))
+    return moment(date).startOf('isoWeek').startOf('day').toDate()
 }
 
-function endOfWeek(startOfWeek: Date): Date {
-    const dt = new Date(startOfWeek)
-    const diff = dt.getDate() + 6
-    return endOfDay(new Date(dt.setDate(diff)))
+function endOfWeek(date: Date): Date {
+    return moment(date).endOf('isoWeek').endOf('day').toDate()
 }
 
 function startOfMonth(date: Date): Date {
-    const dt = new Date(date)
-    return startOfDay(new Date(dt.getFullYear(), dt.getMonth(), 1))
+    return moment(date).startOf('month').startOf('day').toDate()
 }
 
 function endOfMonth(date: Date): Date {
-    const dt = new Date(date)
-    return endOfDay(new Date(dt.getFullYear(), dt.getMonth() + 1, 0))
+    return moment(date).endOf('month').endOf('day').toDate()
 }

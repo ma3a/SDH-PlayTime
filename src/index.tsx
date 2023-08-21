@@ -23,8 +23,8 @@ import { TimeManipulation } from './app/time-manipulation'
 import { SteamlessTimeMigrationPage } from './pages/SteamlessTimeMigrationPage'
 import { ManuallyAdjustTimePage } from './pages/ManuallyAdjustTimePage'
 import { SteamPatches } from './steam-ui/SteamPatches'
-import { SteamLifecycle } from './steam-ui/SteamLifecycle'
 import { patchAppPage } from './steam-ui/patches'
+import { UpdatableCache, UpdateOnEventCache } from './app/cache'
 
 declare global {
     // @ts-ignore
@@ -86,6 +86,19 @@ function createMountables(
     sessionPlayTime: SessionPlayTime,
     timeMigration: TimeManipulation
 ): Mountable[] {
+    let cachedPlayTimes = new UpdateOnEventCache(
+        new UpdatableCache(() =>
+            backend.fetchPerGameOverallStatistics().then((r) => {
+                let map = new Map<string, number>()
+                r.forEach((time) => {
+                    map.set(time.game.id, time.time)
+                })
+                return map
+            })
+        ),
+        eventBus,
+        ['CommitInterval', 'TimeManuallyAdjusted']
+    )
     eventBus.addSubscriber((event) => {
         switch (event.type) {
             case 'NotifyToTakeBreak':
@@ -184,8 +197,7 @@ function createMountables(
             serverApi.routerHook.removeRoute(MANUALLY_ADJUST_TIME)
         },
     })
-    mounts.push(patchAppPage(serverApi, backend))
-    mounts.push(new SteamPatches(backend))
-    mounts.push(new SteamLifecycle(eventBus, backend))
+    mounts.push(patchAppPage(serverApi, cachedPlayTimes))
+    mounts.push(new SteamPatches(cachedPlayTimes))
     return mounts
 }

@@ -3,6 +3,7 @@ import { DailyStatistics } from '../../app/model'
 import { HorizontalContainer } from '../HorizontalContainer'
 import { Timebar } from '../Timebar'
 import { FocusableExt } from '../FocusableExt'
+import moment from 'moment'
 
 interface DayTime {
     dayOfWeek: string
@@ -12,10 +13,9 @@ interface DayTime {
 
 export const WeekView: FC<{ statistics: DailyStatistics[] }> = (props) => {
     let dayTimes = props.statistics.map((it) => {
-        let date = new Date()
-        date.setTime(Date.parse(it.date))
+        let date = moment(it.date).toDate()
         return {
-            dayOfWeek: date.toLocaleString('en-us', { weekday: 'long' }),
+            dayOfWeek: date.toLocaleString(undefined, { weekday: 'long' }),
             time: it.total,
             date: date,
         } as DayTime

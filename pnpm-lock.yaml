@@ -5,9 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
-  decky-frontend-lib:
-    specifier: ^3.21.8
-    version: 3.21.8
+  moment:
+    specifier: ^2.29.4
+    version: 2.29.4
   prop-types:
     specifier: ^15.6.0
     version: 15.8.1
@@ -58,6 +58,9 @@ devDependencies:
   '@typescript-eslint/parser':
     specifier: ^5.35.1
     version: 5.54.1(eslint@8.35.0)(typescript@4.9.5)
+  decky-frontend-lib:
+    specifier: ^3.21.8
+    version: 3.21.8
   eslint:
     specifier: ^8.22.0
     version: 8.35.0
@@ -1758,7 +1761,7 @@ packages:
 
   /decky-frontend-lib@3.21.8:
     resolution: {integrity: sha512-I45KWzoTSakUcsN7drHhiOc+rYKYygIsuYTHqc8DbpPDJvUx6xlU4t7D2TMrj9o/xS/V3WY9N/pX8eF6AcGT1g==}
-    dev: false
+    dev: true
 
   /dedent@0.7.0:
     resolution: {integrity: sha512-Q6fKUPqnAHAyhiUgFU7BUzLiv0kd8saH9al7tnu5Q/okj6dnupxyTgFIBjVzJATdfIAm9NAsvXNzjaKa+bxVyA==}
@@ -3012,6 +3015,10 @@ packages:
   /mobx@5.15.7:
     resolution: {integrity: sha512-wyM3FghTkhmC+hQjyPGGFdpehrcX1KOXsDuERhfK2YbJemkUhEB+6wzEN639T21onxlfYBmriA1PFnvxTUhcKw==}
     dev: true
+
+  /moment@2.29.4:
+    resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
+    dev: false
 
   /ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}

@@ -1,26 +1,22 @@
 import { Mountable } from '../app/system'
 import logger from '../utils'
-import { Backend } from '../app/backend'
-import { GameWithTime } from '../app/model'
+import { Cache } from '../app/cache'
 
 export { SteamPatches }
 
 class SteamPatches implements Mountable {
-    private storage: Backend
-    private cachedApps = new Map<string, number>()
+    private cachedApps: Cache<Map<string, number>>
 
-    constructor(storage: Backend) {
-        this.storage = storage
+    constructor(cachedApps: Cache<Map<string, number>>) {
+        this.cachedApps = cachedApps
     }
 
     public mount() {
         this.ReplaceAppInfoStoreOnAppOverviewChange()
         this.ReplaceAppStoreMapAppsSet()
-        let instance = this
-        this.storage.fetchPerGameOverallStatistics().then((times) => {
-            instance.cachedApps = instance.convertGameWithTimesToMap(times)
+        this.cachedApps.subscribe((data) => {
             let changedApps = []
-            for (let [appId, time] of instance.cachedApps) {
+            for (let [appId, time] of data) {
                 let appOverview = appStore.GetAppOverviewByAppID(parseInt(appId))
                 if (appOverview?.app_type == 1073741824) {
                     appOverview.minutes_playtime_forever = (time / 60.0).toFixed(1)
@@ -66,7 +62,7 @@ class SteamPatches implements Mountable {
         }
     }
 
-    // here we patch AppStore m_mapApps Map set method so we can ovewrite playtime before setting AppOverview
+    // here we patch AppStore m_mapApps Map set method so we can overwrite playtime before setting AppOverview
     private ReplaceAppStoreMapAppsSet() {
         this.RestoreAppStoreMapAppsSet()
         if (appStore.m_mapApps && !appStore.m_mapApps.originalSet) {
@@ -89,14 +85,14 @@ class SteamPatches implements Mountable {
         }
     }
 
-    // here we patch AppOverview InitFromProto method so we can ovewrite playtime after original method
+    // here we patch AppOverview InitFromProto method so we can overwrite playtime after original method
     private appInfoStoreOnAppOverviewChange(appIds: Array<number> | null) {
         logger.debug(`AppInfoStore.OnAppOverviewChange (${appIds ? '[]' : 'null'})`)
         if (appIds) {
             appIds.forEach((appId) => {
                 let appOverview = appStore.GetAppOverviewByAppID(appId)
-                if (appOverview?.app_type == 1073741824) {
-                    const time = this.cachedApps.get(`${appId}`) || 0
+                if (appOverview?.app_type == 1073741824 && this.cachedApps.isReady()) {
+                    const time = this.cachedApps.get()!.get(`${appId}`) || 0
                     appOverview.OriginalInitFromProto = appOverview.InitFromProto
                     appOverview.InitFromProto = function (proto: any) {
                         appOverview.OriginalInitFromProto(proto)
@@ -114,8 +110,8 @@ class SteamPatches implements Mountable {
     // here we set playtime to appOverview before the appOverview is added to AppStore_m_mapApps map
     private appStoreMapAppsSet(appId: number, appOverview: any) {
         //logger.trace(`AppStore.m_mapApps.set (${appId})`);
-        if (appId && appOverview) {
-            const time = this.cachedApps.get(`${appId}`) || 0
+        if (appId && appOverview && this.cachedApps.isReady()) {
+            const time = this.cachedApps.get()!.get(`${appId}`) || 0
             if (time && appOverview?.app_type == 1073741824) {
                 logger.info(
                     `AppStore.m_mapApps.set: Setting playtime for ${appOverview.display_name} (${appId}) to ${time}`
@@ -123,13 +119,5 @@ class SteamPatches implements Mountable {
                 appOverview.minutes_playtime_forever = (time / 60.0).toFixed(1)
             }
         }
-    }
-
-    private convertGameWithTimesToMap(times: GameWithTime[]): Map<string, number> {
-        let map = new Map<string, number>()
-        times.forEach((time) => {
-            map.set(time.game.id, time.time)
-        })
-        return map
     }
 }
