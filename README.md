@@ -6,13 +6,13 @@ PlayTime is a plugin for the SteamDeck gaming console, designed to track the amo
 
 ## Installation
 
-Please note that currently, the PlayTime plugin is not available in the official Decky Plugin Store (https://plugins.deckbrew.xyz/). However, you can install it manually from the GitHub releases.
+The best way to get plugin is to use official Decky Plugin Store (https://plugins.deckbrew.xyz/).
 
 To install PlayTime manually:
 
 1. Go to the [PlayTime GitHub repository](https://github.com/your-username/PlayTime).
 2. Download the latest release package (ZIP format).
-3. Extract the contents of the ZIP package to a location of your choice.
+3. Copy the zip file to SteamDeck and install it from Decky loader.
 
 Alternatively, you can build PlayTime from source by following these steps:
 
@@ -26,19 +26,7 @@ Alternatively, you can build PlayTime from source by following these steps:
    cd SDH-PlayTime
    ```
 
-3. Install the development dependencies using `pnpm`:
-   ```shell
-   pnpm install
-   ```
-
-4. Build the plugin package:
-   ```shell
-   make zip
-   ```
-
-   This will generate a ZIP package containing the built plugin.
-
-5. If you want to deploy the plugin directly to the Deck, use the following command instead:
+3. If you want to deploy the plugin directly to the Deck, use the following command instead:
    ```shell
    make deploy
    ```
