@@ -8,7 +8,6 @@ export {
     AppAchievement,
     AppLanguages,
     AppStore,
-    SteamLessStatistics,
     convertDailyStatisticsToGameWithTime,
     AppInfoStore,
 }
@@ -21,10 +20,6 @@ interface Game {
 interface GameWithTime {
     game: Game
     time: number
-}
-
-interface SteamLessStatistics {
-    [game_id: string]: number
 }
 
 interface DailyStatistics {

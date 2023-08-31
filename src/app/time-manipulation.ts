@@ -1,5 +1,5 @@
 import { Backend } from './backend'
-import { AppOverview, GameWithTime, SteamLessStatistics } from './model'
+import { AppOverview, GameWithTime } from './model'
 
 export const nonSteamGamesPredicate = (app: AppOverview) => app.app_type === 1073741824
 export const excludeApps = (app: AppOverview) => app.app_type != 4
@@ -9,14 +9,6 @@ export class TimeManipulation {
 
     constructor(backend: Backend) {
         this.backend = backend
-    }
-
-    async fetchSteamLessStatistics(): Promise<SteamLessStatistics> {
-        return await this.backend.fetchSteamlessStatistics()
-    }
-
-    async migrateSteamLessTime(games: GameWithTime[]) {
-        await this.backend.migrateSteamLessTime(games)
     }
 
     async applyManualOverallTimeCorrection(game: GameWithTime) {

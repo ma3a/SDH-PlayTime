@@ -1,46 +1,38 @@
-import contextlib
+from dataclasses import dataclass
 import datetime
 import logging
 import sqlite3
-from typing import List, Tuple
+from typing import List
+
+from python.db.sqlite_db import SqlLiteDb
 
 logger = logging.getLogger()
 
 
+@dataclass
 class GameTimeDto:
-    def __init__(self, game_id: str, game_name: str, time: int):
-        self.game_id = game_id
-        self.game_name = game_name
-        self.time = time
+    game_id: str
+    game_name: str
+    time: int
 
 
+@dataclass
 class DailyGameTimeDto:
-    def __init__(self, date: str, game_id: str, game_name: str, time: int):
-        self.date = date
-        self.game_id = game_id
-        self.game_name = game_name
-        self.time = time
+    date: str
+    game_id: str
+    game_name: str
+    time: int
 
 
-class PlayTimeDao:
-    """
-    All methods with _ prefix are private and should not be used directly, and
-    should be used only in transaction context.
-    There are public methods with same name but without _ prefix, which should
-    be used instead.
-    """
-
-    _database_path: str
-
-    def __init__(self, database_path: str):
-        self._database_path = database_path
-        self._migrate()
+class Dao:
+    def __init__(self, db: SqlLiteDb):
+        self._db = db
 
     def save_game_dict(
             self,
             game_id: str,
-            game_name: str):
-        with self._in_transaction() as connection:
+            game_name: str) -> None:
+        with self._db.transactional() as connection:
             self._save_game_dict(connection, game_id, game_name)
 
     def save_play_time(
@@ -48,16 +40,9 @@ class PlayTimeDao:
             start: datetime.datetime,
             time_s: int,
             game_id: str,
-            source: str = None):
-        with self._in_transaction() as connection:
+            source: str = None) -> None:
+        with self._db.transactional() as connection:
             self._save_play_time(connection, start, time_s, game_id, source)
-
-    def is_non_tracked_time_exists(
-            self,
-            game_id: str,
-            source: str) -> bool:
-        with self._in_transaction() as connection:
-            return self._is_non_tracked_time_exists(connection, game_id, source)
 
     def apply_manual_time_for_game(
         self,
@@ -66,8 +51,8 @@ class PlayTimeDao:
         game_name: str,
         new_overall_time: int,
         source: str
-    ):
-        with self._in_transaction() as connection:
+    ) -> None:
+        with self._db.transactional() as connection:
             self._save_game_dict(connection, game_id, game_name)
             current_time = connection.execute(
                 "SELECT sum(duration) FROM play_time WHERE game_id = ?",
@@ -85,19 +70,19 @@ class PlayTimeDao:
         begin: type[datetime.datetime],
         end: type[datetime.datetime]
     ) -> List[DailyGameTimeDto]:
-        with self._in_transaction() as connection:
+        with self._db.transactional() as connection:
             return self._fetch_per_day_time_report(connection, begin, end)
 
     def is_there_is_data_before(
         self, date: type[datetime.datetime]
     ) -> bool:
-        with self._in_transaction() as connection:
+        with self._db.transactional() as connection:
             return self._is_there_is_data_before(connection, date)
 
     def is_there_is_data_after(
         self, date: type[datetime.datetime]
     ) -> bool:
-        with self._in_transaction() as connection:
+        with self._db.transactional() as connection:
             return self._is_there_is_data_after(connection, date)
 
     def _is_there_is_data_before(
@@ -142,7 +127,7 @@ class PlayTimeDao:
         )
 
     def fetch_overall_playtime(self) -> List[GameTimeDto]:
-        with self._in_transaction() as connection:
+        with self._db.transactional() as connection:
             return self._fetch_overall_playtime(connection)
 
     def _save_play_time(
@@ -160,19 +145,6 @@ class PlayTimeDao:
             (start.isoformat(), time_s, game_id, source)
         )
         self._append_overall_time(connection, game_id, time_s)
-
-    def _is_non_tracked_time_exists(
-            self,
-            connection: sqlite3.Connection,
-            game_id: str,
-            source: str) -> bool:
-        return connection.execute(
-            """
-                SELECT count(1) FROM play_time
-                WHERE game_id = ? and migrated = ?
-                """,
-            (game_id, source)
-        ).fetchone()[0] > 0
 
     def _append_overall_time(
             self,
@@ -231,77 +203,3 @@ class PlayTimeDao:
             {"begin": begin.isoformat(), "end": end.isoformat()}
         ).fetchall()
         return result
-
-    def _current_migration_version(self):
-        with self._connection() as con:
-            con.execute(
-                "CREATE TABLE IF NOT EXISTS migration (id INT PRIMARY KEY);"
-            )
-            return con.execute(
-                "SELECT coalesce(max(id), 0) as max_id FROM migration"
-            ).fetchone()[0]
-
-    def _migrate(self):
-        version = self._current_migration_version()
-        self._migration(
-            version,
-            [
-                (1, [
-                    """
-                    CREATE TABLE play_time(
-                        date_time TEXT,
-                        duration INT,
-                        game_id TEXT
-                    )
-                    """,
-                    """
-                    CREATE TABLE overall_time(
-                        game_id TEXT PRIMARY KEY,
-                        duration INT
-                    )
-                    """,
-                    """
-                    CREATE TABLE game_dict(
-                        game_id TEXT PRIMARY KEY,
-                        name TEXT
-                    )
-                    """,
-                ]),
-                (2, [
-                    """
-                    CREATE INDEX play_time_date_time_epoch_idx
-                        ON play_time(UNIXEPOCH(date_time))
-                    """,
-                    """
-                    CREATE INDEX play_time_game_id_idx
-                        ON play_time(game_id)
-                    """,
-                    """
-                    CREATE INDEX overall_time_game_id_idx
-                        ON overall_time(game_id)
-                    """
-                ]),
-                (3, [
-                    "ALTER TABLE play_time ADD COLUMN migrated TEXT"
-                ])
-            ]
-        )
-
-    def _migration(self, existing_migration_id: int,
-                   migrations: List[Tuple[int, List[str]]]):
-        for migr in migrations:
-            if (migr[0] > existing_migration_id):
-                with self._in_transaction() as con:
-                    for stm in migr[1]:
-                        con.execute(stm)
-                    con.execute(
-                        "INSERT INTO migration (id) VALUES (?)", [migr[0]])
-
-    @contextlib.contextmanager
-    def _in_transaction(self):
-        with self._connection() as con:
-            yield con
-            con.commit()
-
-    def _connection(self):
-        return sqlite3.connect(self._database_path)

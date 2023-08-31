@@ -32,10 +32,7 @@ export const ManuallyAdjustTimePage: VFC = () => {
 
     useEffect(() => {
         setLoading(true)
-        Promise.all([
-            timeMigration.fetchPlayTimeForAllGames([excludeApps]),
-            timeMigration.fetchSteamLessStatistics(),
-        ]).then(([playTime]) => {
+        timeMigration.fetchPlayTimeForAllGames([excludeApps]).then((playTime) => {
             setGameWithTimeByAppId(playTime)
             setTableRows([
                 {

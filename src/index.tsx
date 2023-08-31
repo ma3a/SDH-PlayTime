@@ -11,7 +11,6 @@ import { SettingsPage } from './pages/SettingsPage'
 import {
     DETAILED_REPORT_ROUTE,
     MANUALLY_ADJUST_TIME,
-    MIGRATION_PAGE,
     SETTINGS_ROUTE,
 } from './pages/navigation'
 import { BreaksReminder } from './app/notification'
@@ -20,7 +19,6 @@ import { DeckyPanelPage } from './pages/DeckyPanelPage'
 import { LocatorProvider } from './locator'
 import { Reports } from './app/reports'
 import { TimeManipulation } from './app/time-manipulation'
-import { SteamlessTimeMigrationPage } from './pages/SteamlessTimeMigrationPage'
 import { ManuallyAdjustTimePage } from './pages/ManuallyAdjustTimePage'
 import { SteamPatches } from './steam-ui/SteamPatches'
 import { patchAppPage } from './steam-ui/patches'
@@ -161,23 +159,6 @@ function createMountables(
         },
         unMount() {
             serverApi.routerHook.removeRoute(SETTINGS_ROUTE)
-        },
-    })
-    mounts.push({
-        mount() {
-            serverApi.routerHook.addRoute(MIGRATION_PAGE, () => (
-                <LocatorProvider
-                    reports={reports}
-                    sessionPlayTime={sessionPlayTime}
-                    settings={settings}
-                    timeManipulation={timeMigration}
-                >
-                    <SteamlessTimeMigrationPage />
-                </LocatorProvider>
-            ))
-        },
-        unMount() {
-            serverApi.routerHook.removeRoute(MIGRATION_PAGE)
         },
     })
     mounts.push({

@@ -8,7 +8,7 @@ import {
 } from 'decky-frontend-lib'
 import { useEffect, useState, VFC } from 'react'
 import { ChartStyle, DEFAULTS, PlayTimeSettings } from '../app/settings'
-import { MANUALLY_ADJUST_TIME, MIGRATION_PAGE, navigateToPage } from './navigation'
+import { MANUALLY_ADJUST_TIME, navigateToPage } from './navigation'
 import { useLocator } from '../locator'
 import { Tab } from '../components/Tab'
 
@@ -87,16 +87,9 @@ export const GeneralSettings: VFC<{}> = () => {
     )
 }
 
-export const TimeMigration: VFC<{}> = () => {
+export const TimeManipulation: VFC<{}> = () => {
     return (
         <div>
-            <PanelSection title="SteamLessTime / Metadeck migration">
-                <PanelSectionRow>
-                    <ButtonItem onClick={() => navigateToPage(MIGRATION_PAGE)}>
-                        Migrate
-                    </ButtonItem>
-                </PanelSectionRow>
-            </PanelSection>
             <PanelSection title="Change overall play time">
                 <PanelSectionRow>
                     <ButtonItem onClick={() => navigateToPage(MANUALLY_ADJUST_TIME)}>
@@ -121,10 +114,10 @@ export const SettingsPage: VFC<{}> = () => {
                     ),
                 },
                 {
-                    title: 'Time migration',
+                    title: 'Time manipulation',
                     content: (
                         <Tab>
-                            <TimeMigration />
+                            <TimeManipulation />
                         </Tab>
                     ),
                 },
