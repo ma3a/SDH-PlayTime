@@ -104,7 +104,7 @@ class TestPlayTime(AbstractDatabaseTest):
             }
         ])
 
-    def test_should_sum_totalTime_per_day(self):
+    def test_should_sum_total_time_per_day(self):
         now = datetime(2022, 1, 1, 9, 0)
         self.time_tracking.add_time(
             now.timestamp(), (now + timedelta(hours=1)).timestamp(), "100", "Zelda BOTW")
@@ -166,6 +166,7 @@ class TestPlayTime(AbstractDatabaseTest):
 
         result = self.playtime_statistics.daily_statistics_for_period(
             date_02.date(), date_08.date())
+        # pylint: disable=C0103
         self.maxDiff = None
         self.assertEqual([dataclasses.asdict(r) for r in result.data], [
             {

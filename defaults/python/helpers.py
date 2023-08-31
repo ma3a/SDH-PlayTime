@@ -8,8 +8,8 @@ def parse_date(date_str: str) -> date:
     return datetime.strptime(date_str, DATE_FORMAT).date()
 
 
-def format_date(datetime: datetime) -> str:
-    return datetime.strftime(DATE_FORMAT)
+def format_date(dt: datetime) -> str:
+    return dt.strftime(DATE_FORMAT)
 
 
 def end_of_day(day_to_end: datetime) -> datetime:
