@@ -1,9 +1,11 @@
 # autopep8: off
+import dataclasses
 import logging
 import os
 import sys
 from pathlib import Path
 from typing import Any, List
+
 
 decky_home = os.environ["DECKY_HOME"]
 log_dir = os.environ["DECKY_PLUGIN_LOG_DIR"]
@@ -22,37 +24,46 @@ logger.setLevel(logging.INFO)
 
 def add_plugin_to_path():
     directories = [["./"], ["python"]]
-    for dir in directories:
-        sys.path.append(str(plugin_dir.joinpath(*dir)))
+    for import_dir in directories:
+        sys.path.append(str(plugin_dir.joinpath(*import_dir)))
 
 
 add_plugin_to_path()
-
-from datetime import datetime
-from python.play_time_dao import PlayTimeDao
-from python.playtime import PlayTimeStatistics, PlayTimeTracking, DATE_FORMAT
-from python.external_time_tracker import ExternalTimeTracker
+# pylint: disable=wrong-import-position
+from python.db.sqlite_db import SqlLiteDb
+from python.db.dao import Dao
+from python.db.migration import DbMigration
+from python.statistics import Statistics
+from python.time_tracking import TimeTracking
+from python.helpers import parse_date
+# pylint: enable=wrong-import-position
 
 # autopep8: on
 
 
 class Plugin:
-    playtime_tracking = None
-    playtime_statistics = None
-    external_time_tracker = None
+    time_tracking = None
+    statistics = None
 
     async def _main(self):
         try:
-            dao = PlayTimeDao(f"{data_dir}/storage.db")
-            self.playtime_tracking = PlayTimeTracking(dao)
-            self.playtime_statistics = PlayTimeStatistics(dao)
-            self.external_time_tracker = ExternalTimeTracker()
+            db = SqlLiteDb(f"{data_dir}/storage.db")
+            migration = DbMigration(db)
+            migration.migrate()
+
+            dao = Dao(db)
+            self.time_tracking = TimeTracking(dao)
+            self.statistics = Statistics(dao)
         except Exception:
             logger.exception("Unhandled exception")
 
-    async def add_time(self, started_at, ended_at, game_id, game_name):
+    async def add_time(self,
+                       started_at: int,
+                       ended_at: int,
+                       game_id: str,
+                       game_name: str):
         try:
-            self.playtime_tracking.add_time(
+            self.time_tracking.add_time(
                 started_at=started_at,
                 ended_at=ended_at,
                 game_id=game_id,
@@ -63,43 +74,25 @@ class Plugin:
 
     async def daily_statistics_for_period(self, start_date: str, end_date: str):
         try:
-            return self.playtime_statistics.daily_statistics_for_period(
-                datetime.strptime(start_date, DATE_FORMAT).date(),
-                datetime.strptime(end_date, DATE_FORMAT).date()
+            return dataclasses.asdict(
+                self.statistics.daily_statistics_for_period(
+                    parse_date(start_date),
+                    parse_date(end_date))
             )
         except Exception:
             logger.exception("Unhandled exception")
 
     async def per_game_overall_statistics(self):
         try:
-            return self.playtime_statistics.per_game_overall_statistic()
-        except Exception:
-            logger.exception("Unhandled exception")
-
-    async def steamless_statistics(self):
-        try:
-            return self.external_time_tracker.get_games_in_steamless_time(
-                decky_home=decky_home)
+            return self.statistics.per_game_overall_statistic()
         except Exception:
             logger.exception("Unhandled exception")
 
     async def apply_manual_time_correction(
             self, list_of_game_stats: List[dict[str, Any]]):
         try:
-            return self.playtime_tracking.apply_manual_time_for_games(
+            return self.time_tracking.apply_manual_time_for_games(
                 list_of_game_stats=list_of_game_stats,
                 source="manually-changed")
         except Exception:
             logger.exception("Unhandled exception")
-
-    async def migrate_from_steam_less_time(
-            self, list_of_game_stats: List[dict[str, Any]]):
-        try:
-            return self.playtime_tracking.apply_manual_time_for_games(
-                list_of_game_stats=list_of_game_stats,
-                source="steam-less-time")
-        except Exception:
-            logger.exception("Unhandled exception")
-
-    async def _unload(self):
-        logger.info("Unloading play time plugin")

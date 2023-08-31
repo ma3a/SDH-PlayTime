@@ -1,13 +1,10 @@
 {
-  "name": "PlayTime",
-  "author": "ma3a, Witherking25",
-  "flags": [],
-  "publish": {
-    "tags": [
-      "utility",
-      "time-tracking"
-    ],
-    "description": "Tracks time you are playing, and provides reports and provide time information for non Steam games.",
-    "image": "https://raw.githubusercontent.com/ma3a/SDH-PlayTime/main/assets/image.png"
-  }
+    "name": "PlayTime",
+    "author": "ma3a, Witherking25",
+    "flags": [],
+    "publish": {
+        "tags": ["utility", "time-tracking", "playtime"],
+        "description": "Tracks time for Steam and non-Steam games with reports and charts",
+        "image": "https://raw.githubusercontent.com/ma3a/SDH-PlayTime/main/assets/image.png"
+    }
 }

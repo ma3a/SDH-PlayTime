@@ -53,3 +53,8 @@ fix_permissions1 fix_permissions2:
 restart_plugin_loader:
 	ssh deck@$(DECK_IP) -p $(DECK_PORT) $(DECK_SSH_KEY) 'echo '$(DECK_PASS)' | sudo -S systemctl restart plugin_loader.service'
 
+verify: 
+	python3 -m unittest discover -s ./python -p '*_test.py'
+	node 'node_modules/jest/bin/jest.js' ./test --silent
+
+

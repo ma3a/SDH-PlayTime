@@ -1,7 +1,7 @@
 import { ServerAPI } from 'decky-frontend-lib'
 import logger from '../utils'
 import { toIsoDateOnly } from './formatters'
-import { DailyStatistics, Game, GameWithTime, SteamLessStatistics } from './model'
+import { DailyStatistics, Game, GameWithTime } from './model'
 import { EventBus } from './system'
 
 export interface OverallPlayTimes {
@@ -102,39 +102,6 @@ export class Backend {
         }
 
         return response.result as GameWithTime[]
-    }
-
-    async fetchSteamlessStatistics(): Promise<SteamLessStatistics> {
-        const response = await this.serverApi.callPluginMethod<{}, SteamLessStatistics>(
-            'steamless_statistics',
-            {}
-        )
-        if (!response.success) {
-            this.errorOnBackend(
-                "Can't fetch steamless statistics, because of backend error (steamless_statistics)"
-            )
-            return {} as SteamLessStatistics
-        }
-        return response.result as SteamLessStatistics
-    }
-
-    async migrateSteamLessTime(games: GameWithTime[]): Promise<boolean> {
-        const response = await this.serverApi.callPluginMethod<
-            {
-                list_of_game_stats: GameWithTime[]
-            },
-            void
-        >('migrate_from_steam_less_time', {
-            list_of_game_stats: games,
-        })
-        if (!response.success) {
-            this.errorOnBackend(
-                "Can't migrate steamless statistics, because of backend error (migrate_from_steam_less_time)"
-            )
-            return false
-        }
-        this.eventBus.emit({ type: 'TimeManuallyAdjusted' })
-        return true
     }
 
     async applyManualOverallTimeCorrection(games: GameWithTime[]): Promise<boolean> {

@@ -1,35 +1,23 @@
-import os
-import unittest
 import sqlite3
 from datetime import datetime
-from play_time_dao import PlayTimeDao
+from python.db.dao import Dao
+from python.db.migration import DbMigration
+from python.tests.helpers import AbstractDatabaseTest
 
 
-class FixedClock:
-    def now(self):
-        return datetime(2023, 1, 1, 9, 0)
-
-
-class TestPlayTimeDao(unittest.TestCase):
-    database = "test_db.db"
-    dao: PlayTimeDao
+class TestDao(AbstractDatabaseTest):
+    dao: Dao = None
 
     def setUp(self) -> None:
-        if os.path.exists(self.database):
-            os.remove(self.database)
-        self.dao = PlayTimeDao(self.database)
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        if os.path.exists(self.database):
-            os.remove(self.database)
-        return super().tearDown()
+        super().setUp()
+        DbMigration(db=self.database).migrate()
+        self.dao = Dao(db=self.database)
 
     def test_should_save_game_dict_only_once(self):
         self.dao.save_game_dict("1001", "Zelda BOTW")
         self.dao.save_game_dict("1001", "Zelda BOTW - updated")
 
-        result = sqlite3.connect(self.database).execute(
+        result = sqlite3.connect(self.database_file).execute(
             "select game_id, name from game_dict").fetchone()
         self.assertEqual(result[0], "1001")
         self.assertEqual(result[1], "Zelda BOTW - updated")
@@ -41,7 +29,7 @@ class TestPlayTimeDao(unittest.TestCase):
             3600,
             "1001"
         )
-        result = sqlite3.connect(self.database).execute(
+        result = sqlite3.connect(self.database_file).execute(
             "select date_time, game_id, duration from play_time").fetchone()
         self.assertEqual(result[0], "2023-01-01T10:00:00")
         self.assertEqual(result[1], "1001")
@@ -92,7 +80,7 @@ class TestPlayTimeDao(unittest.TestCase):
             source="manually-added_time"
         )
 
-        self.assertEquals(self._get_overall_time_for_game("1001"), 3600)
+        self.assertEqual(self._get_overall_time_for_game("1001"), 3600)
 
     def test_should_manually_added_playtime_for_not_tracked_game(self):
         self.dao.save_game_dict("1001", "Zelda BOTW")
@@ -104,14 +92,10 @@ class TestPlayTimeDao(unittest.TestCase):
             source="manually-added-time"
         )
 
-        self.assertEquals(self._get_overall_time_for_game("1001"), 3600)
+        self.assertEqual(self._get_overall_time_for_game("1001"), 3600)
 
     def _get_overall_time_for_game(self, game_id: str):
         return list(
             filter(
                 lambda x: x.game_id == game_id,
                 self.dao.fetch_overall_playtime()))[0].time
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -1,6 +1,6 @@
 import { afterPatch, RoutePatch, ServerAPI } from 'decky-frontend-lib'
 import { ReactElement } from 'react'
-import { AppDetails, AppOverview, GameWithTime } from '../app/model'
+import { AppDetails, AppOverview } from '../app/model'
 import { Mountable } from '../app/system'
 import { Cache } from '../app/cache'
 import { runInAction } from 'mobx'
