@@ -3,10 +3,15 @@ import { DailyStatistics } from '../../app/model'
 import { humanReadableTime } from '../../app/formatters'
 import { Field, PanelSection, PanelSectionRow } from 'decky-frontend-lib'
 import { FocusableExt } from '../FocusableExt'
+import moment from 'moment'
 
 export const AverageAndOverall: FC<{ statistics: DailyStatistics[] }> = (props) => {
     const overall = props.statistics.map((it) => it.total).reduce((a, c) => a + c, 0)
-    const average = overall / props.statistics.length
+    let today = moment(new Date()).startOf('day')
+    const daysPassed = props.statistics.filter((it) =>
+        moment(it.date).startOf('day').isSameOrBefore(today)
+    ).length
+    const average = overall / daysPassed
     return (
         <FocusableExt>
             <PanelSection title="Average and overall">
