@@ -1,6 +1,6 @@
+import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from '../utils'
 import { Backend } from './backend'
 import { DailyStatistics, GameWithTime } from './model'
-import moment from 'moment'
 
 export interface Interval {
     start: Date
@@ -177,20 +177,4 @@ export class IntervalPagerImpl {
     public current(): Interval {
         return this.interval
     }
-}
-
-function startOfWeek(date: Date): Date {
-    return moment(date).startOf('isoWeek').startOf('day').toDate()
-}
-
-function endOfWeek(date: Date): Date {
-    return moment(date).endOf('isoWeek').endOf('day').toDate()
-}
-
-function startOfMonth(date: Date): Date {
-    return moment(date).startOf('month').startOf('day').toDate()
-}
-
-function endOfMonth(date: Date): Date {
-    return moment(date).endOf('month').endOf('day').toDate()
 }

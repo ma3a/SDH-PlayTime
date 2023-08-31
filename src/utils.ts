@@ -1,3 +1,5 @@
+import moment from 'moment'
+
 export const log = (...args: any[]) => {
     console.log(
         `%c PlayTime %c`,
@@ -48,12 +50,29 @@ export function ifNull<T>(value: T | undefined, defaultValue: T): T {
     return value
 }
 
-export function map<T, U>(
-    data: T | undefined,
-    transformationFunc: (data: T) => U
-): U | undefined {
+export function map<T, U>(data: T | undefined, mapFunc: (data: T) => U): U | undefined {
     if (data === undefined) {
         return undefined
     }
-    return transformationFunc(data)
+    return mapFunc(data)
+}
+
+export function startOfWeek(date: Date): Date {
+    return moment(date).startOf('isoWeek').startOf('day').toDate()
+}
+
+export function minusDays(date: Date, days: number): Date {
+    return moment(date).subtract(days, 'days').toDate()
+}
+
+export function endOfWeek(date: Date): Date {
+    return moment(date).endOf('isoWeek').endOf('day').toDate()
+}
+
+export function startOfMonth(date: Date): Date {
+    return moment(date).startOf('month').startOf('day').toDate()
+}
+
+export function endOfMonth(date: Date): Date {
+    return moment(date).endOf('month').endOf('day').toDate()
 }

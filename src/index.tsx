@@ -22,7 +22,7 @@ import { TimeManipulation } from './app/time-manipulation'
 import { ManuallyAdjustTimePage } from './pages/ManuallyAdjustTimePage'
 import { SteamPatches } from './steam-ui/SteamPatches'
 import { patchAppPage } from './steam-ui/patches'
-import { UpdatableCache, UpdateOnEventCache } from './app/cache'
+import { createCachedLastTwoWeeksPlayTimes, createCachedPlayTimes } from './cachables'
 
 declare global {
     // @ts-ignore
@@ -84,19 +84,8 @@ function createMountables(
     sessionPlayTime: SessionPlayTime,
     timeMigration: TimeManipulation
 ): Mountable[] {
-    let cachedPlayTimes = new UpdateOnEventCache(
-        new UpdatableCache(() =>
-            backend.fetchPerGameOverallStatistics().then((r) => {
-                let map = new Map<string, number>()
-                r.forEach((time) => {
-                    map.set(time.game.id, time.time)
-                })
-                return map
-            })
-        ),
-        eventBus,
-        ['CommitInterval', 'TimeManuallyAdjusted']
-    )
+    let cachedPlayTimes = createCachedPlayTimes(backend, eventBus)
+    let cachedLastTwoWeeksPlayTimes = createCachedLastTwoWeeksPlayTimes(backend, eventBus)
     eventBus.addSubscriber((event) => {
         switch (event.type) {
             case 'NotifyToTakeBreak':
@@ -179,6 +168,6 @@ function createMountables(
         },
     })
     mounts.push(patchAppPage(serverApi, cachedPlayTimes))
-    mounts.push(new SteamPatches(cachedPlayTimes))
+    mounts.push(new SteamPatches(cachedPlayTimes, cachedLastTwoWeeksPlayTimes))
     return mounts
 }

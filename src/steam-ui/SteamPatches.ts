@@ -1,33 +1,46 @@
 import { Mountable } from '../app/system'
 import logger from '../utils'
 import { Cache } from '../app/cache'
+import { AppOverview } from '../app/model'
 
 export { SteamPatches }
 
 class SteamPatches implements Mountable {
-    private cachedApps: Cache<Map<string, number>>
+    private cachedOverallTime: Cache<Map<string, number>>
+    private cachedLastTwoWeeksTimes: Cache<Map<string, number>>
 
-    constructor(cachedApps: Cache<Map<string, number>>) {
-        this.cachedApps = cachedApps
+    constructor(
+        cachedOverallTime: Cache<Map<string, number>>,
+        cachedLastTwoWeeksTimes: Cache<Map<string, number>>
+    ) {
+        this.cachedOverallTime = cachedOverallTime
+        this.cachedLastTwoWeeksTimes = cachedLastTwoWeeksTimes
     }
 
     public mount() {
         this.ReplaceAppInfoStoreOnAppOverviewChange()
         this.ReplaceAppStoreMapAppsSet()
-        this.cachedApps.subscribe((data) => {
-            let changedApps = []
-            for (let [appId, time] of data) {
-                let appOverview = appStore.GetAppOverviewByAppID(parseInt(appId))
-                if (appOverview?.app_type == 1073741824) {
-                    appOverview.minutes_playtime_forever = (time / 60.0).toFixed(1)
-                    changedApps.push(appOverview)
+        let instance = this
+        this.cachedOverallTime.subscribe((overallTimes) => {
+            this.cachedLastTwoWeeksTimes.subscribe((lastTwoWeeksTimes) => {
+                let changedApps = []
+                for (let [appId, time] of overallTimes) {
+                    let appOverview = appStore.GetAppOverviewByAppID(parseInt(appId))
+                    if (appOverview?.app_type == 1073741824) {
+                        instance.patchOverviewWithValues(
+                            appOverview,
+                            time,
+                            lastTwoWeeksTimes.get(appId) || 0
+                        )
+                        changedApps.push(appOverview)
+                    }
                 }
-            }
-            appInfoStore.OnAppOverviewChange(changedApps)
-            appStore.m_mapApps.set(
-                changedApps.map((app) => app.appid),
-                changedApps
-            )
+                appInfoStore.OnAppOverviewChange(changedApps)
+                appStore.m_mapApps.set(
+                    changedApps.map((app) => app.appid),
+                    changedApps
+                )
+            })
         })
     }
 
@@ -91,15 +104,12 @@ class SteamPatches implements Mountable {
         if (appIds) {
             appIds.forEach((appId) => {
                 let appOverview = appStore.GetAppOverviewByAppID(appId)
-                if (appOverview?.app_type == 1073741824 && this.cachedApps.isReady()) {
-                    const time = this.cachedApps.get()!.get(`${appId}`) || 0
+                if (appOverview?.app_type == 1073741824) {
+                    let instance = this
                     appOverview.OriginalInitFromProto = appOverview.InitFromProto
                     appOverview.InitFromProto = function (proto: any) {
                         appOverview.OriginalInitFromProto(proto)
-                        logger.info(
-                            `AppOverview.InitFromProto: Setting playtime for ${appOverview.display_name} (${appId}) to ${time}`
-                        )
-                        appOverview.minutes_playtime_forever = (time / 60.0).toFixed(1)
+                        instance.patchAppOverviewFromCache(appOverview)
                         appOverview.InitFromProto = appOverview.OriginalInitFromProto
                     }
                 }
@@ -110,14 +120,37 @@ class SteamPatches implements Mountable {
     // here we set playtime to appOverview before the appOverview is added to AppStore_m_mapApps map
     private appStoreMapAppsSet(appId: number, appOverview: any) {
         //logger.trace(`AppStore.m_mapApps.set (${appId})`);
-        if (appId && appOverview && this.cachedApps.isReady()) {
-            const time = this.cachedApps.get()!.get(`${appId}`) || 0
-            if (time && appOverview?.app_type == 1073741824) {
-                logger.info(
-                    `AppStore.m_mapApps.set: Setting playtime for ${appOverview.display_name} (${appId}) to ${time}`
-                )
-                appOverview.minutes_playtime_forever = (time / 60.0).toFixed(1)
-            }
+        if (appId && appOverview) {
+            this.patchAppOverviewFromCache(appOverview)
         }
+    }
+
+    private patchAppOverviewFromCache(appOverview: AppOverview): AppOverview {
+        if (
+            appOverview?.app_type == 1073741824 &&
+            this.cachedOverallTime.isReady() &&
+            this.cachedLastTwoWeeksTimes.isReady()
+        ) {
+            const overallTime =
+                this.cachedOverallTime.get()!.get(`${appOverview.appid}`) || 0
+            const lastTwoWeeksTime =
+                this.cachedLastTwoWeeksTimes.get()!.get(`${appOverview.appid}`) || 0
+            this.patchOverviewWithValues(appOverview, overallTime, lastTwoWeeksTime)
+        }
+        return appOverview
+    }
+
+    private patchOverviewWithValues(
+        appOverview: AppOverview,
+        overallTime: number,
+        lastTwoWeeksTime: number
+    ): AppOverview {
+        if (appOverview?.app_type == 1073741824) {
+            appOverview.minutes_playtime_forever = (overallTime / 60.0).toFixed(1)
+            appOverview.minutes_playtime_last_two_weeks = Number.parseFloat(
+                (lastTwoWeeksTime / 60.0).toFixed(1)
+            )
+        }
+        return appOverview
     }
 }
