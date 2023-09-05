@@ -1,8 +1,7 @@
-import sqlite3
-from datetime import datetime
+from datetime import timedelta
 from python.db.dao import Dao
 from python.db.migration import DbMigration
-from python.tests.helpers import AbstractDatabaseTest
+from python.tests.helpers import AbstractDatabaseTest, clock
 
 
 class TestDao(AbstractDatabaseTest):
@@ -11,91 +10,183 @@ class TestDao(AbstractDatabaseTest):
     def setUp(self) -> None:
         super().setUp()
         DbMigration(db=self.database).migrate()
-        self.dao = Dao(db=self.database)
+        self.dao = Dao()
 
-    def test_should_save_game_dict_only_once(self):
-        self.dao.save_game_dict("1001", "Zelda BOTW")
-        self.dao.save_game_dict("1001", "Zelda BOTW - updated")
+    def test_save_game_info(self):
+        game_id = "game_id"
+        game_name = "game_name"
+        with self.database.transactional() as connection:
+            self.dao.save_game_info(connection, game_id, game_name)
 
-        result = sqlite3.connect(self.database_file).execute(
-            "select game_id, name from game_dict").fetchone()
-        self.assertEqual(result[0], "1001")
-        self.assertEqual(result[1], "Zelda BOTW - updated")
+        with self.database.transactional() as connection:
+            res = connection.execute(
+                "SELECT game_id, name FROM game_dict WHERE game_id = ?", (game_id,)).fetchall()
+            self.assertEqual(len(res), 1)
+            self.assertEqual(res[0][0], game_id)
+            self.assertEqual(res[0][1], game_name)
 
-    def test_should_add_new_interval(self):
-        self.dao.save_game_dict("1001", "Zelda BOTW")
-        self.dao.save_play_time(
-            datetime(2023, 1, 1, 10, 0),
-            3600,
-            "1001"
-        )
-        result = sqlite3.connect(self.database_file).execute(
-            "select date_time, game_id, duration from play_time").fetchone()
-        self.assertEqual(result[0], "2023-01-01T10:00:00")
-        self.assertEqual(result[1], "1001")
-        self.assertEqual(result[2], 3600)
+    def test_save_game_info_deduplicates(self):
+        game_id = "game_id"
+        game_name = "game_name"
+        game_name_changed = "game_name_changed"
+        with self.database.transactional() as connection:
+            self.dao.save_game_info(connection, game_id, game_name)
+            self.dao.save_game_info(connection, game_id, game_name_changed)
 
-    def test_should_calculate_per_day_time_report(self):
-        self.dao.save_game_dict("1001", "Zelda BOTW")
-        self.dao.save_game_dict("1002", "DOOM")
-        self.dao.save_play_time(
-            datetime(2023, 1, 1, 9, 0),
-            3600,
-            "1001"
-        )
-        self.dao.save_play_time(
-            datetime(2023, 1, 1, 11, 0),
-            1800,
-            "1001"
-        )
-        self.dao.save_play_time(
-            datetime(2023, 1, 2, 10, 0),
-            2000,
-            "1002"
-        )
-        result = self.dao.fetch_per_day_time_report(
-            datetime(2023, 1, 1, 0, 0),
-            datetime(2023, 1, 2, 23, 59)
-        )
-        self.assertEqual(len(result), 2)
+        with self.database.transactional() as connection:
+            res = connection.execute(
+                "SELECT game_id, name FROM game_dict WHERE game_id = ?", (game_id,)).fetchall()
+            self.assertEqual(len(res), 1)
+            self.assertEqual(res[0][0], game_id)
+            self.assertEqual(res[0][1], game_name_changed)
 
-        self.assertEqual(result[0].date, "2023-01-01")
-        self.assertEqual(result[0].game_id, "1001")
-        self.assertEqual(result[0].game_name, "Zelda BOTW")
-        self.assertEqual(result[0].time, 5400)
+    def test_save_play_time(self):
+        start = clock.now()
+        duration = 60
+        game_id = "game_id"
+        with self.database.transactional() as connection:
+            self.dao.save_play_time(connection, start, duration, game_id)
 
-        self.assertEqual(result[1].date, "2023-01-02")
-        self.assertEqual(result[1].game_id, "1002")
-        self.assertEqual(result[1].game_name, "DOOM")
-        self.assertEqual(result[1].time, 2000)
+        with self.database.transactional() as connection:
+            res = connection.execute(
+                "SELECT date_time, duration, game_id, migrated FROM play_time WHERE game_id = ?",
+                (game_id,)
+            ).fetchall()
+            self.assertEqual(len(res), 1)
+            self.assertEqual(res[0][0], start.isoformat())
+            self.assertEqual(res[0][1], duration)
+            self.assertEqual(res[0][2], game_id)
+            self.assertEqual(res[0][3], None)
 
-    def test_should_manually_added_playtime_for_tracked_game(self):
-        self.dao.save_game_dict("1001", "Zelda BOTW")
-        self.dao.save_play_time(datetime(2023, 1, 1, 11, 0), 1800, "1001")
-        self.dao.apply_manual_time_for_game(
-            create_at=datetime.now(),
-            game_id="1001",
-            game_name="Zelda BOTW",
-            new_overall_time=3600,
-            source="manually-added_time"
-        )
+    def test_add_overall_time(self):
+        with self.database.transactional() as connection:
+            self.dao.add_overall_time(connection, "game_id", 60)
 
-        self.assertEqual(self._get_overall_time_for_game("1001"), 3600)
+        with self.database.transactional() as connection:
+            res = connection.execute(
+                "SELECT game_id, duration FROM overall_time WHERE game_id = ?",
+                ("game_id",)
+            ).fetchall()
+            self.assertEqual(len(res), 1)
+            self.assertEqual(res[0][0], "game_id")
+            self.assertEqual(res[0][1], 60)
 
-    def test_should_manually_added_playtime_for_not_tracked_game(self):
-        self.dao.save_game_dict("1001", "Zelda BOTW")
-        self.dao.apply_manual_time_for_game(
-            create_at=datetime.now(),
-            game_id="1001",
-            game_name="Zelda BOTW",
-            new_overall_time=3600,
-            source="manually-added-time"
-        )
+    def test_add_overall_sequentially(self):
+        with self.database.transactional() as connection:
+            self.dao.add_overall_time(connection, "game_id", 60)
+            self.dao.add_overall_time(connection, "game_id", 60)
 
-        self.assertEqual(self._get_overall_time_for_game("1001"), 3600)
+        with self.database.transactional() as connection:
+            res = connection.execute(
+                "SELECT game_id, duration FROM overall_time WHERE game_id = ?",
+                ("game_id",)
+            ).fetchall()
+            self.assertEqual(len(res), 1)
+            self.assertEqual(res[0][0], "game_id")
+            self.assertEqual(res[0][1], 120)
 
-    def _get_overall_time_for_game(self, game_id: str):
-        return list(
-            filter(
-                lambda x: x.game_id == game_id,
-                self.dao.fetch_overall_playtime()))[0].time
+    def test_fetch_games_overall(self):
+        with self.database.transactional() as connection:
+            self.dao.save_game_info(connection, "game_id_1", "game_name_1")
+            self.dao.save_game_info(connection, "game_id_2", "game_name_2")
+            self.dao.add_overall_time(connection, "game_id_1", 60)
+            self.dao.add_overall_time(connection, "game_id_2", 60)
+
+        with self.database.transactional() as connection:
+            res = self.dao.fetch_all_games_overall(connection)
+            self.assertEqual(len(res), 2)
+            self.assertEqual(res[0].game_id, "game_id_1")
+            self.assertEqual(res[0].duration, 60)
+            self.assertEqual(res[1].game_id, "game_id_2")
+            self.assertEqual(res[1].duration, 60)
+
+    def test_calc_playtime_for_game(self):
+        with self.database.transactional() as connection:
+            self.dao.save_play_time(connection, clock.now(), 60, "game_id")
+            self.dao.save_play_time(
+                connection,
+                clock.now_with_delta(
+                    timedelta(
+                        minutes=1)),
+                60,
+                "game_id")
+
+        with self.database.transactional() as connection:
+            res = self.dao.calc_playtime_for_game(connection, "game_id")
+            self.assertEqual(res, 120)
+
+    def test_has_sessions_before_should_be_true(self):
+        with self.database.transactional() as connection:
+            self.dao.save_play_time(connection, clock.now(), 60, "game_id")
+
+        with self.database.transactional() as connection:
+            res = self.dao.has_sessions_before(
+                connection, clock.now_with_delta(timedelta(minutes=10)))
+            self.assertEqual(res, True)
+
+    def test_has_sessions_before_should_be_false(self):
+        with self.database.transactional() as connection:
+            self.dao.save_play_time(
+                connection,
+                clock.now_with_delta(timedelta(minutes=10)),
+                60,
+                "game_id")
+
+        with self.database.transactional() as connection:
+            res = self.dao.has_sessions_before(
+                connection, clock.now())
+            self.assertEqual(res, False)
+
+    def test_has_sessions_after_should_be_true(self):
+        with self.database.transactional() as connection:
+            self.dao.save_play_time(
+                connection,
+                clock.now_with_delta(timedelta(minutes=10)),
+                60,
+                "game_id")
+
+        with self.database.transactional() as connection:
+            res = self.dao.has_sessions_after(
+                connection, clock.now())
+            self.assertEqual(res, True)
+
+    def test_has_sessions_after_should_be_false(self):
+        with self.database.transactional() as connection:
+            self.dao.save_play_time(connection, clock.now(), 60, "game_id")
+
+        with self.database.transactional() as connection:
+            res = self.dao.has_sessions_after(
+                connection, clock.now_with_delta(timedelta(minutes=10)))
+            self.assertEqual(res, False)
+
+    def test_fetch_play_times_in_interval_has_results(self):
+        with self.database.transactional() as connection:
+            self.dao.save_play_time(
+                connection,
+                clock.now_with_delta(timedelta(minutes=10)),
+                60,
+                "game_id")
+
+        with self.database.transactional() as connection:
+            res = self.dao.fetch_play_times_in_interval(
+                connection,
+                clock.now_with_delta(timedelta(minutes=5)),
+                clock.now_with_delta(timedelta(minutes=15)))
+            self.assertEqual(len(res), 1)
+            self.assertEqual(res[0].game_id, "game_id")
+            self.assertEqual(res[0].duration, 60)
+
+    def test_fetch_play_times_in_interval_has_no_results(self):
+        with self.database.transactional() as connection:
+            self.dao.save_play_time(
+                connection,
+                clock.now_with_delta(timedelta(minutes=5)),
+                60,
+                "game_id")
+
+        with self.database.transactional() as connection:
+            res = self.dao.fetch_play_times_in_interval(
+                connection,
+                clock.now_with_delta(timedelta(minutes=10)),
+                clock.now_with_delta(timedelta(minutes=15)))
+            self.assertEqual(len(res), 0)

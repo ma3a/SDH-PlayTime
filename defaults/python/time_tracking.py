@@ -1,8 +1,8 @@
 from datetime import datetime
 import logging
 from typing import Dict, List
-from python.db.dao import Dao
-from python.helpers import end_of_day
+from python.db.service import StorageService
+from python.helpers import next_day_at_midnight
 
 
 DATE_FORMAT = "%Y-%m-%d"
@@ -10,43 +10,45 @@ logger = logging.getLogger()
 
 
 class TimeTracking:
-    dao: Dao
+    service: StorageService
 
-    def __init__(self, dao: Dao) -> None:
-        self.dao = dao
+    def __init__(self, service: StorageService) -> None:
+        self.service = service
 
     def add_time(self,
-                 started_at: int,
-                 ended_at: int,
+                 started: datetime,
+                 ended: datetime,
                  game_id: str,
                  game_name: str):
-        self.dao.save_game_dict(game_id, game_name)
-        day_end_for_start_at = end_of_day(
-            datetime.fromtimestamp(started_at)
-        ).timestamp()
-        intervals = []
-        if (started_at < day_end_for_start_at
-                and ended_at > day_end_for_start_at):
-            intervals.append(
-                (started_at, day_end_for_start_at + 1, game_id, game_name))
-            intervals.append(
-                (day_end_for_start_at + 1, ended_at, game_id, game_name))
+        next_day_midnight = next_day_at_midnight(started)
+        if (started < next_day_midnight
+                and ended > next_day_midnight):
+            self.service.save_play_time(
+                started,
+                next_day_midnight.timestamp() - started.timestamp(),
+                game_id,
+                game_name
+            )
+            self.service.save_play_time(
+                next_day_midnight,
+                ended.timestamp() - next_day_midnight.timestamp(),
+                game_id,
+                game_name
+            )
         else:
-            intervals.append(
-                (started_at, ended_at, game_id, game_name))
-
-        for interval in intervals:
-            (i_started_at, i_ended_at, i_game_id, _) = interval
-            length = i_ended_at - i_started_at
-            self.dao.save_play_time(datetime.fromtimestamp(
-                i_started_at), length, i_game_id)
+            self.service.save_play_time(
+                started,
+                ended.timestamp() - started.timestamp(),
+                game_id,
+                game_name
+            )
 
     def apply_manual_time_for_games(self,
                                     list_of_game_stats: List[Dict],
                                     source: str):
         now = datetime.now()
         for stat in list_of_game_stats:
-            self.dao.apply_manual_time_for_game(
+            self.service.apply_manual_time_for_game(
                 now,
                 stat["game"]["id"],
                 stat["game"]["name"],

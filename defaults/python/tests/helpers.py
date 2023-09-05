@@ -1,16 +1,53 @@
-from datetime import datetime
+import contextlib
+from datetime import datetime, timedelta
 import os
+import sqlite3
+from typing import ContextManager
 import unittest
 
 from python.db.sqlite_db import SqlLiteDb
 
+NOW = datetime(2023, 1, 1, 0, 0)
+
 
 class FixedClock:
-    def now(self):
-        return datetime(2023, 1, 1, 9, 0)
+    def now(self) -> datetime:
+        return NOW
+
+    def now_with_delta(self, delta: timedelta) -> datetime:
+        return NOW + delta
+
+    def now_at_time(self, hour: int, minute: int) -> datetime:
+        return datetime(NOW.year, NOW.month, NOW.day, hour, minute, 0, 0)
 
 
-class AbstractDatabaseTest(unittest.TestCase):
+clock = FixedClock()
+
+
+class FakeConnection(sqlite3.Connection):
+    def __init__(self):
+        pass
+
+
+mock_connection = FakeConnection
+
+
+class MockSqliteDb(SqlLiteDb):
+    def __init__(self):
+        pass
+
+    @contextlib.contextmanager
+    def transactional(self) -> ContextManager[sqlite3.Connection]:
+        connection = mock_connection
+        yield connection
+
+
+class AbstractTest(unittest.TestCase):
+    if __name__ == '__main__':
+        unittest.main()
+
+
+class AbstractDatabaseTest(AbstractTest):
     database_file = f"test_db_{os.getpid()}.db"
     database: SqlLiteDb = None
 

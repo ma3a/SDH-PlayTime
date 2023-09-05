@@ -8,13 +8,20 @@ def parse_date(date_str: str) -> date:
     return datetime.strptime(date_str, DATE_FORMAT).date()
 
 
-def format_date(dt: datetime) -> str:
-    return dt.strftime(DATE_FORMAT)
+def format_date(date_time: datetime) -> str:
+    return date_time.strftime(DATE_FORMAT)
 
 
-def end_of_day(day_to_end: datetime) -> datetime:
+def next_day_at_midnight(day: datetime) -> datetime:
     return datetime.fromtimestamp(
-        datetime.combine(
-            day_to_end + timedelta(days=1), datetime.min.time()
-        ).timestamp() - 1
-    )
+        datetime.combine(day + timedelta(days=1), datetime.min.time()).timestamp())
+
+
+def start_of_day(day: date) -> datetime:
+    return datetime.fromtimestamp(
+        datetime.combine(day, datetime.min.time()).timestamp())
+
+
+def end_of_day(day: date) -> datetime:
+    return datetime.fromtimestamp(
+        datetime.combine(day, datetime.max.time()).timestamp())

@@ -68,7 +68,7 @@ class DbMigration:
         version = self._current_migration_version()
         latest_version_in_migration = max(_migrations, key=lambda m: m.version).version
 
-        if (latest_version_in_migration < version):
+        if latest_version_in_migration < version:
             raise Exception(
                 "Database have been updated with latest version. Please update plugin")
 

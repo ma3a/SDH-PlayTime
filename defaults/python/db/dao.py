@@ -1,189 +1,89 @@
-from dataclasses import dataclass
 import datetime
 import logging
 import sqlite3
-from typing import List
-
-from python.db.sqlite_db import SqlLiteDb
+from typing import List, Optional
+from python.db.models import DailyAggSessionDto, GameAggSessionsDto
 
 logger = logging.getLogger()
 
 
-@dataclass
-class GameTimeDto:
-    game_id: str
-    game_name: str
-    time: int
-
-
-@dataclass
-class DailyGameTimeDto:
-    date: str
-    game_id: str
-    game_name: str
-    time: int
-
-
 class Dao:
-    def __init__(self, db: SqlLiteDb):
-        self._db = db
 
-    def save_game_dict(
-            self,
-            game_id: str,
-            game_name: str) -> None:
-        with self._db.transactional() as connection:
-            self._save_game_dict(connection, game_id, game_name)
-
-    def save_play_time(
-            self,
-            start: datetime.datetime,
-            time_s: int,
-            game_id: str,
-            source: str = None) -> None:
-        with self._db.transactional() as connection:
-            self._save_play_time(connection, start, time_s, game_id, source)
-
-    def apply_manual_time_for_game(
-        self,
-        create_at: datetime.datetime,
-        game_id: str,
-        game_name: str,
-        new_overall_time: int,
-        source: str
-    ) -> None:
-        with self._db.transactional() as connection:
-            self._save_game_dict(connection, game_id, game_name)
-            current_time = connection.execute(
-                "SELECT sum(duration) FROM play_time WHERE game_id = ?",
-                (game_id,)
-            ).fetchone()[0]
-            delta_time = new_overall_time - \
-                (current_time if current_time is not None else 0)
-            if delta_time != 0:
-                self._save_play_time(
-                    connection, create_at, delta_time, game_id, source
-                )
-
-    def fetch_per_day_time_report(
-        self,
-        begin: type[datetime.datetime],
-        end: type[datetime.datetime]
-    ) -> List[DailyGameTimeDto]:
-        with self._db.transactional() as connection:
-            return self._fetch_per_day_time_report(connection, begin, end)
-
-    def is_there_is_data_before(
-        self, date: type[datetime.datetime]
-    ) -> bool:
-        with self._db.transactional() as connection:
-            return self._is_there_is_data_before(connection, date)
-
-    def is_there_is_data_after(
-        self, date: type[datetime.datetime]
-    ) -> bool:
-        with self._db.transactional() as connection:
-            return self._is_there_is_data_after(connection, date)
-
-    def _is_there_is_data_before(
-        self,
-        connection: sqlite3.Connection,
-        date: type[datetime.datetime]
-    ) -> bool:
-        return connection.execute(
-            """
-                SELECT count(1) FROM play_time
-                WHERE date_time < ?
-            """,
-            (date.isoformat(),)
-        ).fetchone()[0] > 0
-
-    def _is_there_is_data_after(
-        self,
-        connection: sqlite3.Connection,
-        date: type[datetime.datetime]
-    ) -> bool:
-        return connection.execute(
-            """
-                SELECT count(1) FROM play_time
-                WHERE date_time > ?
-            """,
-            (date.isoformat(),)
-        ).fetchone()[0] > 0
-
-    def _save_game_dict(
+    def save_game_info(
             self,
             connection: sqlite3.Connection,
             game_id: str,
-            game_name: str):
+            game_name: str) -> None:
         connection.execute(
             """
                 INSERT INTO game_dict (game_id, name)
                 VALUES (:game_id, :game_name)
                 ON CONFLICT (game_id) DO UPDATE SET name = :game_name
                 WHERE name != :game_name
-                """,
+            """,
             {"game_id": game_id, "game_name": game_name}
         )
 
-    def fetch_overall_playtime(self) -> List[GameTimeDto]:
-        with self._db.transactional() as connection:
-            return self._fetch_overall_playtime(connection)
-
-    def _save_play_time(
+    def save_play_time(
             self,
             connection: sqlite3.Connection,
             start: datetime.datetime,
-            time_s: int,
+            duration: int,
             game_id: str,
-            source: str = None):
+            migration_source: Optional[str] = None) -> None:
         connection.execute(
             """
                 INSERT INTO play_time(date_time, duration, game_id, migrated)
                 VALUES (?,?,?,?)
-                """,
-            (start.isoformat(), time_s, game_id, source)
+            """,
+            (start.isoformat(), duration, game_id, migration_source)
         )
-        self._append_overall_time(connection, game_id, time_s)
 
-    def _append_overall_time(
+    def calc_playtime_for_game(self, connection: sqlite3.Connection, game_id: str) -> int:
+        return connection.execute(
+            "SELECT sum(duration) FROM play_time WHERE game_id = ?",
+            (game_id,)
+        ).fetchone()[0]
+
+    def add_overall_time(
             self,
             connection: sqlite3.Connection,
             game_id: str,
-            delta_time_s: int):
+            delta_duration: int) -> None:
         connection.execute(
             """
                 INSERT INTO overall_time (game_id, duration)
-                VALUES (:game_id, :delta_time_s)
+                VALUES (:game_id, :delta_duration)
                 ON CONFLICT (game_id)
-                    DO UPDATE SET duration = duration + :delta_time_s
+                    DO UPDATE SET duration = duration + :delta_duration
             """,
-            {"game_id": game_id, "delta_time_s": delta_time_s}
+            {"game_id": game_id, "delta_duration": delta_duration}
         )
 
-    def _fetch_overall_playtime(
+    def fetch_all_games_overall(
         self,
         connection: sqlite3.Connection,
-    ) -> List[GameTimeDto]:
-        connection.row_factory = lambda c, row: GameTimeDto(
-            game_id=row[0], game_name=row[1], time=row[2])
+    ) -> List[GameAggSessionsDto]:
+        connection.row_factory = lambda c, row: GameAggSessionsDto(
+            game_id=row[0], game_name=row[1], duration=row[2])
         return connection.execute(
             """
                 SELECT ot.game_id, gd.name AS game_name, ot.duration
                 FROM overall_time ot
                         JOIN game_dict gd ON ot.game_id = gd.game_id
+                ORDER by ot.game_id
             """
         ).fetchall()
 
-    def _fetch_per_day_time_report(
+    def fetch_play_times_in_interval(
         self,
         connection: sqlite3.Connection,
         begin: type[datetime.datetime],
         end: type[datetime.datetime]
-    ) -> List[DailyGameTimeDto]:
-        connection.row_factory = lambda c, row: DailyGameTimeDto(
-            date=row[0], game_id=row[1], game_name=row[2], time=row[3])
-        result = connection.execute(
+    ) -> List[DailyAggSessionDto]:
+        connection.row_factory = lambda c, row: DailyAggSessionDto(
+            date=row[0], game_id=row[1], game_name=row[2], duration=row[3])
+        return connection.execute(
             """
                 SELECT STRFTIME('%Y-%m-%d', UNIXEPOCH(date_time), 'unixepoch') as date,
                     pt.game_id as game_id,
@@ -196,10 +96,36 @@ class Dao:
                     UNIXEPOCH(:end)
                 AND migrated IS NULL
 
-                GROUP BY STRFTIME('%Y-%m-%d', UNIXEPOCH(date_time), 'unixepoch'),
+                GROUP BY date,
                          pt.game_id,
                          gd.name
+                ORDER by date
             """,
             {"begin": begin.isoformat(), "end": end.isoformat()}
         ).fetchall()
-        return result
+
+    def has_sessions_before(
+        self,
+        connection: sqlite3.Connection,
+        date: type[datetime.datetime]
+    ) -> bool:
+        return connection.execute(
+            """
+                SELECT count(1) FROM play_time
+                WHERE UNIXEPOCH(date_time) < UNIXEPOCH(?)
+            """,
+            (date.isoformat(),)
+        ).fetchone()[0] > 0
+
+    def has_sessions_after(
+        self,
+        connection: sqlite3.Connection,
+        date: type[datetime.datetime]
+    ) -> bool:
+        return connection.execute(
+            """
+                SELECT count(1) FROM play_time
+                WHERE UNIXEPOCH(date_time) > UNIXEPOCH(?)
+            """,
+            (date.isoformat(),)
+        ).fetchone()[0] > 0

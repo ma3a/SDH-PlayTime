@@ -1,79 +1,63 @@
-from datetime import datetime, date, time, timedelta
+from collections import defaultdict
+from datetime import date, timedelta
 from typing import Dict, List
-from python.db.dao import DailyGameTimeDto, Dao
-from python.helpers import format_date
+from python.db.models import DailyAggSessionDto
+from python.db.service import StorageService
+from python.helpers import end_of_day, start_of_day
 from python.models import DayStatistics, Game, GameWithTime, PagedDayStatistics
 
 
 class Statistics:
-    dao: Dao
+    service: StorageService
 
-    def __init__(self, dao: Dao) -> None:
-        self.dao = dao
+    def __init__(self, service: StorageService) -> None:
+        self.service = service
 
     def daily_statistics_for_period(self,
                                     start: date,
                                     end: date) -> PagedDayStatistics:
-        start_time = datetime.combine(
-            start, time(00, 00, 00))
-        end_time = datetime.combine(
-            end, time(23, 59, 59, 999999))
-        data = self.dao.fetch_per_day_time_report(start_time, end_time)
+        start_dt = start_of_day(start)
+        end_dt = end_of_day(end)
+        paged = self.service.fetch_agg_per_day_report(start_dt, end_dt)
 
-        data_as_dict: Dict[str, List[DailyGameTimeDto]] = {}
-        for it in data:
-            if it.date in data_as_dict:
-                data_as_dict[it.date].append(it)
-            else:
-                data_as_dict[it.date] = [it]
-
-        result: List[DayStatistics] = []
         date_range = self._generate_date_range(start, end)
-        for day in date_range:
-            date_str = format_date(day)
-            if date_str in data_as_dict:
-                games: List[Game] = []
-                total_time = 0
-                for el in data_as_dict[date_str]:
-                    games.append(
-                        GameWithTime(
-                            Game(el.game_id, el.game_name),
-                            el.time
-                        )
-                    )
-                    total_time += el.time
-                result.append(
-                    DayStatistics(
-                        date=date_str,
-                        games=games,
-                        total=total_time
-                    )
-                )
-            else:
-                result.append(DayStatistics(date_str, [], 0))
+        sessions_by_date: Dict[str, List[DailyAggSessionDto]] = defaultdict(list)
+        for agg_session in paged.data:
+            sessions_by_date[agg_session.date].append(agg_session)
+
         return PagedDayStatistics(
-            data=result,
-            hasPrev=self.dao.is_there_is_data_before(start_time),
-            hasNext=self.dao.is_there_is_data_after(end_time)
+            data=[self._map_to_daily_stat(date, sessions_by_date[date])
+                  for (date) in date_range],
+            hasNext=paged.has_next,
+            hasPrev=paged.has_prev
+        )
+
+    def _map_to_daily_stat(
+            self, date_str: str, agg_sessions: List[DailyAggSessionDto]) -> DayStatistics:
+        games: List[GameWithTime] = [
+            GameWithTime(
+                game=Game(session.game_id, session.game_name),
+                time=session.duration
+            ) for session in agg_sessions]
+        return DayStatistics(
+            date=date_str,
+            games=games,
+            total=sum([session.duration for session in agg_sessions])
         )
 
     def per_game_overall_statistic(self) -> List[GameWithTime]:
-        data = self.dao.fetch_overall_playtime()
-        result: List[GameWithTime] = []
-        for g in data:
-            result.append({
-                "game": {
-                    "id": g.game_id,
-                    "name": g.game_name
-                },
-                "time": g.time
-            })
-        return result
+        data = self.service.fetch_overall_playtime()
+        return [
+            GameWithTime(
+                game=Game(id=game.game_id, name=game.game_name),
+                time=game.duration
+            ) for game in data
+        ]
 
-    def _generate_date_range(self, start_date, end_date):
+    def _generate_date_range(self, start_date: date, end_date: date) -> List[str]:
         date_list = []
         curr_date = start_date
         while curr_date <= end_date:
-            date_list.append(curr_date)
+            date_list.append(curr_date.isoformat())
             curr_date += timedelta(days=1)
         return date_list

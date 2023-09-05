@@ -1,5 +1,6 @@
 # autopep8: off
 import dataclasses
+from datetime import datetime
 import logging
 import os
 import sys
@@ -64,8 +65,8 @@ class Plugin:
                        game_name: str):
         try:
             self.time_tracking.add_time(
-                started_at=started_at,
-                ended_at=ended_at,
+                started=datetime.fromtimestamp(started_at),
+                ended=datetime.fromtimestamp(ended_at),
                 game_id=game_id,
                 game_name=game_name
             )
