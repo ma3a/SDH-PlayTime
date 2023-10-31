@@ -25,29 +25,32 @@ class SteamEventMiddleware implements Mountable {
         }
 
         // hook login state (user login/logout)
-        this.activeHooks.push(SteamClient.User.RegisterForLoginStateChange((username: string) => {
-            if (username) {
-                this.eventBus.emit({
-                    type: "UserLoggedIn",
-                    createdAt: this.clock.getTimeMs(),
-                    username: username
-                });
-            } else {
-                this.eventBus.emit({
-                    type: "UserLoggedOut",
-                    createdAt: this.clock.getTimeMs()
-                })
-            }
-        }));
+        this.activeHooks.push(
+            SteamClient.User.RegisterForLoginStateChange((username: string) => {
+                if (username) {
+                    this.eventBus.emit({
+                        type: 'UserLoggedIn',
+                        createdAt: this.clock.getTimeMs(),
+                        username: username,
+                    })
+                } else {
+                    this.eventBus.emit({
+                        type: 'UserLoggedOut',
+                        createdAt: this.clock.getTimeMs(),
+                    })
+                }
+            })
+        )
 
         this.activeHooks.push(
             SteamClient.GameSessions.RegisterForAppLifetimeNotifications(
                 async (data: LifetimeNotification) => {
                     let game = await this.awaitGameInfo()
                     if (game == null || game == undefined) {
+                        const info = appStore.GetAppOverviewByAppID(data.unAppID)
                         game = {
                             id: data.unAppID.toString(),
-                            name: '',
+                            name: info.display_name,
                         }
                     }
                     if (data.bRunning) {
