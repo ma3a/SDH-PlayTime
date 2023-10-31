@@ -2,7 +2,8 @@ import datetime
 import logging
 import sqlite3
 from typing import List, Optional
-from python.db.models import DailyAggSessionDto, GameAggSessionsDto
+from python.db.models import DailyAggSessionDto, GameAggSessionsDto, SessionDto
+from python.models import FeedDirection
 
 logger = logging.getLogger()
 
@@ -66,7 +67,7 @@ class Dao:
     ) -> List[GameAggSessionsDto]:
         connection.row_factory = lambda c, row: GameAggSessionsDto(
             game_id=row[0], game_name=row[1], duration=row[2])
-        return connection.execute(
+        result = connection.execute(
             """
                 SELECT ot.game_id, gd.name AS game_name, ot.duration
                 FROM overall_time ot
@@ -74,6 +75,8 @@ class Dao:
                 ORDER by ot.game_id
             """
         ).fetchall()
+        connection.row_factory = None
+        return result
 
     def fetch_play_times_in_interval(
         self,
@@ -83,7 +86,7 @@ class Dao:
     ) -> List[DailyAggSessionDto]:
         connection.row_factory = lambda c, row: DailyAggSessionDto(
             date=row[0], game_id=row[1], game_name=row[2], duration=row[3])
-        return connection.execute(
+        result = connection.execute(
             """
                 SELECT STRFTIME('%Y-%m-%d', UNIXEPOCH(date_time), 'unixepoch') as date,
                     pt.game_id as game_id,
@@ -103,6 +106,39 @@ class Dao:
             """,
             {"begin": begin.isoformat(), "end": end.isoformat()}
         ).fetchall()
+        connection.row_factory = None
+        return result
+
+    def fetch_sessions(
+        self,
+        connection: sqlite3.Connection,
+        date_time: type[datetime.datetime],
+        limit: int,
+        direction: FeedDirection
+    ) -> List[SessionDto]:
+        connection.row_factory = lambda c, row: SessionDto(
+            date_time=datetime.datetime.fromisoformat(row[0]),
+            game_id=row[1],
+            game_name=row[2],
+            duration=row[3]
+        )
+        date_comp_op = "<" if direction == FeedDirection.UP else ">"
+        result = connection.execute(
+            f"""
+                SELECT pt.date_time as date_time,
+                       pt.game_id as game_id,
+                       gd.name as game_name,
+                       pt.duration as duration
+                FROM play_time pt
+                        LEFT JOIN game_dict gd ON pt.game_id = gd.game_id
+                WHERE UNIXEPOCH(pt.date_time) {date_comp_op} UNIXEPOCH(:date_time)
+                ORDER by UNIXEPOCH(pt.date_time) desc
+                LIMIT :limit
+            """,
+            {"date_time": date_time.isoformat(), "limit": limit}
+        ).fetchall()
+        connection.row_factory = None
+        return result
 
     def has_sessions_before(
         self,

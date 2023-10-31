@@ -4,6 +4,11 @@ from datetime import date, datetime, timedelta
 DATE_FORMAT = "%Y-%m-%d"
 
 
+class Clock():
+    def now(self) -> datetime:
+        return datetime.now()
+
+
 def parse_date(date_str: str) -> date:
     return datetime.strptime(date_str, DATE_FORMAT).date()
 

@@ -1,18 +1,13 @@
 import { ServerAPI } from 'decky-frontend-lib'
 import logger from '../utils'
 import { toIsoDateOnly } from './formatters'
-import { DailyStatistics, Game, GameWithTime } from './model'
+import {
+    Game,
+    GameWithTime,
+    SessionsInIntervalResponse,
+    StatisticForIntervalResponse,
+} from './model'
 import { EventBus } from './system'
-
-export interface OverallPlayTimes {
-    [gameId: string]: number
-}
-
-export interface StatisticForIntervalResponse {
-    data: DailyStatistics[]
-    hasPrev: boolean
-    hasNext: boolean
-}
 
 export class Backend {
     private serverApi: ServerAPI
@@ -87,6 +82,27 @@ export class Backend {
         }
 
         return response.result as StatisticForIntervalResponse
+    }
+
+    async fetchSessionsFeed(token: string | null): Promise<SessionsInIntervalResponse> {
+        const response = await this.serverApi.callPluginMethod<
+            { token: string | null },
+            SessionsInIntervalResponse
+        >('sessions_feed', {
+            token: token,
+        })
+        if (!response.success) {
+            this.errorOnBackend(
+                "Can't fetch data, because of backend error (sessions_feed)"
+            )
+            return {
+                earlierToken: null,
+                laterToken: null,
+                data: [],
+            } as SessionsInIntervalResponse
+        }
+
+        return response.result as SessionsInIntervalResponse
     }
 
     async fetchPerGameOverallStatistics(): Promise<GameWithTime[]> {

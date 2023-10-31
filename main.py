@@ -32,11 +32,12 @@ def add_plugin_to_path():
 add_plugin_to_path()
 # pylint: disable=wrong-import-position
 from python.db.sqlite_db import SqlLiteDb
+from python.db.service import StorageService
 from python.db.dao import Dao
 from python.db.migration import DbMigration
 from python.statistics import Statistics
 from python.time_tracking import TimeTracking
-from python.helpers import parse_date
+from python.helpers import Clock, parse_date
 # pylint: enable=wrong-import-position
 
 # autopep8: on
@@ -52,9 +53,10 @@ class Plugin:
             migration = DbMigration(db)
             migration.migrate()
 
-            dao = Dao(db)
-            self.time_tracking = TimeTracking(dao)
-            self.statistics = Statistics(dao)
+            dao = Dao()
+            service = StorageService(dao, db, Clock())
+            self.time_tracking = TimeTracking(service)
+            self.statistics = Statistics(service)
         except Exception:
             logger.exception("Unhandled exception")
 
@@ -85,7 +87,13 @@ class Plugin:
 
     async def per_game_overall_statistics(self):
         try:
-            return self.statistics.per_game_overall_statistic()
+            return [dataclasses.asdict(d) for d in self.statistics.per_game_overall_statistic()]
+        except Exception:
+            logger.exception("Unhandled exception")
+
+    async def sessions_feed(self, token: str):
+        try:
+            return dataclasses.asdict(self.statistics.fetch_sessions_feed(token=token))
         except Exception:
             logger.exception("Unhandled exception")
 

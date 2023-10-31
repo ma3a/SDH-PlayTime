@@ -1,6 +1,8 @@
 from datetime import timedelta
 from python.db.dao import Dao
 from python.db.migration import DbMigration
+from python.db.models import SessionDto
+from python.models import FeedDirection
 from python.tests.helpers import AbstractDatabaseTest, clock
 
 
@@ -190,3 +192,38 @@ class TestDao(AbstractDatabaseTest):
                 clock.now_with_delta(timedelta(minutes=10)),
                 clock.now_with_delta(timedelta(minutes=15)))
             self.assertEqual(len(res), 0)
+
+    def test_fetch_sessions(self):
+        time_00 = clock.now_with_delta(timedelta(hours=-1))
+        time_01 = clock.now()
+        time_02 = clock.now_with_delta(timedelta(hours=1))
+        time_03 = clock.now_with_delta(timedelta(hours=2))
+        time_04 = clock.now_with_delta(timedelta(hours=3))
+        with self.database.transactional() as connection:
+            self.dao.save_game_info(connection, "game_id_1", "game_name_1")
+            self.dao.save_play_time(connection, time_00, 1, "game_id_1")  # not in range
+            self.dao.save_play_time(connection, time_01, 5, "game_id_1")
+            self.dao.save_play_time(connection, time_02, 10, "game_id_1")
+            self.dao.save_play_time(connection, time_03, 15, "game_id_1")
+            self.dao.save_play_time(connection, time_04, 20, "game_id_1")  # not in range
+
+        with self.database.transactional() as connection:
+            res = self.dao.fetch_sessions(connection, time_00, 3, FeedDirection.UP)
+            self.assertEqual(len(res), 3)
+            self.assertEqual(res, [
+                SessionDto(date_time=time_01.isoformat(),
+                           duration=5,
+                           game_id="game_id_1",
+                           game_name="game_name_1"
+                           ),
+                SessionDto(date_time=time_02.isoformat(),
+                           duration=10,
+                           game_id="game_id_1",
+                           game_name="game_name_1"
+                           ),
+                SessionDto(date_time=time_03.isoformat(),
+                           duration=15,
+                           game_id="game_id_1",
+                           game_name="game_name_1"
+                           ),
+            ])

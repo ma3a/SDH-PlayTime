@@ -1,6 +1,11 @@
 import { endOfMonth, endOfWeek, startOfMonth, startOfWeek } from '../utils'
 import { Backend } from './backend'
-import { DailyStatistics, GameWithTime } from './model'
+import {
+    DailyStatistics,
+    GameWithTime,
+    Session,
+    SessionsInIntervalResponse,
+} from './model'
 
 export interface Interval {
     start: Date
@@ -66,6 +71,51 @@ export class Reports {
 
     public async overallStatistics(): Promise<GameWithTime[]> {
         return await this.backend.fetchPerGameOverallStatistics()
+    }
+
+    public async sessionsFeed(): Promise<SessionPaginatedImpl> {
+        return SessionPaginatedImpl.create(this.backend, null)
+    }
+}
+
+class SessionPaginatedImpl implements Paginated<Session> {
+    private backend: Backend
+    private response: SessionsInIntervalResponse
+
+    private constructor(backend: Backend, response: SessionsInIntervalResponse) {
+        this.backend = backend
+        this.response = response
+    }
+
+    hasNext(): boolean {
+        return this.response.laterToken !== null
+    }
+
+    hasPrev(): boolean {
+        return this.response.earlierToken !== null
+    }
+
+    current(): Page<Session> {
+        return {
+            data: this.response.data,
+            interval: {} as Interval,
+        } as Page<Session>
+    }
+
+    next(): Promise<SessionPaginatedImpl> {
+        return SessionPaginatedImpl.create(this.backend, this.response.laterToken)
+    }
+
+    prev(): Promise<SessionPaginatedImpl> {
+        return SessionPaginatedImpl.create(this.backend, this.response.earlierToken)
+    }
+
+    static async create(
+        backend: Backend,
+        token: string | null
+    ): Promise<SessionPaginatedImpl> {
+        const response = await backend.fetchSessionsFeed(token)
+        return new SessionPaginatedImpl(backend, response)
     }
 }
 

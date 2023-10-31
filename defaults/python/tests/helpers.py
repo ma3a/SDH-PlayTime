@@ -6,11 +6,12 @@ from typing import ContextManager
 import unittest
 
 from python.db.sqlite_db import SqlLiteDb
+from python.helpers import Clock
 
 NOW = datetime(2023, 1, 1, 0, 0)
 
 
-class FixedClock:
+class FixedClock(Clock):
     def now(self) -> datetime:
         return NOW
 
@@ -43,6 +44,9 @@ class MockSqliteDb(SqlLiteDb):
 
 
 class AbstractTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.maxDiff = None
+        return super().setUp()
     if __name__ == '__main__':
         unittest.main()
 

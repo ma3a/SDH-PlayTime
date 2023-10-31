@@ -5,6 +5,7 @@ import { PageWrapper } from '../components/PageWrapper'
 import { ReportMonthly } from '../containers/ReportMonthly'
 import { ReportWeekly } from '../containers/ReportWeekly'
 import { ReportOverall } from '../containers/ReportOverall'
+import { ReportActivity } from '../containers/ReportActivity'
 
 export const DetailedPage: VFC = () => {
     const [currentTabRoute, setCurrentTabRoute] = useState<string>('all-time')
@@ -42,6 +43,15 @@ export const DetailedPage: VFC = () => {
                             </Tab>
                         ),
                         id: 'by-week',
+                    },
+                    {
+                        title: 'Activity Feed',
+                        content: (
+                            <Tab>
+                                <ReportActivity />
+                            </Tab>
+                        ),
+                        id: 'feed',
                     },
                 ]}
             />

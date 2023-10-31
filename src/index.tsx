@@ -4,7 +4,7 @@ import { Clock, EventBus, Mountable, MountManager, systemClock } from './app/sys
 import { Backend } from './app/backend'
 import { SteamEventMiddleware } from './app/middleware'
 import { SessionPlayTime } from './app/SessionPlayTime'
-import { AppInfoStore, AppStore } from './app/model'
+import { AppInfoStore, AppStore } from './app/externalModels'
 import { DetailedPage } from './pages/ReportPage'
 import { Settings } from './app/settings'
 import { SettingsPage } from './pages/SettingsPage'

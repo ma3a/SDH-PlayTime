@@ -1,8 +1,9 @@
 from datetime import timedelta
 from unittest.mock import Mock
 from python.db.dao import Dao
-from python.db.models import DailyAggSessionDto, GameAggSessionsDto, PagedAggSessionsDto
-from python.db.service import StorageService
+from python.db.models import DailyAggSessionDto, GameAggSessionsDto, PagedAggSessionsDto, SessionDto, SessionsFeedDto
+from python.db.service import _Token, StorageService
+from python.models import FeedDirection, FeedRequest
 from python.tests.helpers import AbstractTest, MockSqliteDb, clock, mock_connection
 
 
@@ -10,7 +11,7 @@ class StorageServiceTest(AbstractTest):
 
     def setUp(self):
         self.dao_mock = Mock(spec=Dao)
-        self.service = StorageService(self.dao_mock, MockSqliteDb())
+        self.service = StorageService(dao=self.dao_mock, db=MockSqliteDb(), clock=clock)
 
     def test_save_play_time(self):
         # when
@@ -103,3 +104,116 @@ class StorageServiceTest(AbstractTest):
         self.dao_mock.has_sessions_after.assert_called_once_with(
             mock_connection, clock.now_with_delta(timedelta(days=1))
         )
+
+    def test_token_encode(self):
+        self.assertEqual(
+            "eyJsYXN0X3NlZW4iOiAiMjAyMy0wMS0wMVQwMDowMDowMCIsICJkaXJlY3Rpb24iOiAiTEFURVIifQ==",
+            _Token(
+                last_seen=clock.now(),
+                direction=FeedDirection.UP,
+            ).encode()
+        )
+
+    def test_token_decode(self):
+        self.assertEqual(
+            _Token(
+                last_seen=clock.now(),
+                direction=FeedDirection.UP,
+            ),
+            _Token.decode(
+                "eyJsYXN0X3NlZW4iOiAiMjAyMy0wMS0wMVQwMDowMDowMCIsICJkaXJlY3Rpb24iOiAiTEFURVIifQ=="
+            )
+        )
+
+    def test_fetch_sessions(self):
+        # given
+        date_01 = clock.now()
+        date_02 = clock.now_with_delta(timedelta(days=1))
+        token_str = _Token(
+            last_seen=date_01,
+            direction=FeedDirection.UP,
+        ).encode()
+        sessions = [
+            SessionDto(date_time=date_01, game_id="id_1", game_name="name_1", duration=15),
+            SessionDto(date_time=date_02, game_id="id_2", game_name="name_2", duration=30),
+        ]
+        self.dao_mock.fetch_sessions.return_value = sessions
+        # when
+        result = self.service.fetch_sessions_feed(
+            FeedRequest(
+                direction=FeedDirection.DOWN,
+                limit=2,
+                token_str=token_str
+            )
+        )
+        # expect
+        self.dao_mock.fetch_sessions.assert_called_once_with(
+            mock_connection, date_time=date_01, direction=FeedDirection.UP, limit=2
+        )
+        self.assertEqual(result, SessionsFeedDto(
+            data=sessions,
+            earlier_token=_Token(
+                last_seen=date_01,
+                direction=FeedDirection.DOWN,
+            ).encode(),
+            later_token=_Token(
+                last_seen=date_02,
+                direction=FeedDirection.UP,
+            ).encode(),
+        ))
+
+    def test_fetch_sessions_when_no_token(self):
+        # given
+        date_01 = clock.now()
+        date_02 = clock.now_with_delta(timedelta(days=1))
+        sessions = [
+            SessionDto(date_time=date_01, game_id="id_1", game_name="name_1", duration=15),
+            SessionDto(date_time=date_02, game_id="id_2", game_name="name_2", duration=30),
+        ]
+        self.dao_mock.fetch_sessions.return_value = sessions
+        # when
+        result = self.service.fetch_sessions_feed(
+            FeedRequest(
+                direction=FeedDirection.UP,
+                limit=2,
+                token_str=None
+            )
+        )
+        # expect
+        self.dao_mock.fetch_sessions.assert_called_once_with(
+            mock_connection, date_time=date_01, direction=FeedDirection.UP, limit=2
+        )
+        self.assertEqual(result, SessionsFeedDto(
+            data=sessions,
+            earlier_token=_Token(
+                last_seen=date_01,
+                direction=FeedDirection.DOWN,
+            ).encode(),
+            later_token=_Token(
+                last_seen=date_02,
+                direction=FeedDirection.UP,
+            ).encode(),
+        ))
+
+    def test_fetch_sessions_when_no_data(self):
+        # given
+        date_01 = clock.now()
+        sessions = []
+        self.dao_mock.fetch_sessions.return_value = sessions
+        # when
+        result = self.service.fetch_sessions_feed(
+            FeedRequest(
+                direction=FeedDirection.UP,
+                limit=2,
+                token_str=None
+            )
+        )
+        # expect
+        self.dao_mock.fetch_sessions.assert_called_once_with(
+            mock_connection, date_time=date_01, direction=FeedDirection.UP, limit=2
+        )
+        self.assertEqual(result, SessionsFeedDto(
+            data=sessions,
+            earlier_token=None,
+            later_token=None,
+        ))

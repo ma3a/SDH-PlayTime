@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from typing import List
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional
 
 
 @dataclass
@@ -19,7 +21,7 @@ class DailyAggSessionDto:
 
 @dataclass
 class SessionDto:
-    start_date_time: str
+    date_time: datetime
     game_id: str
     game_name: str
     duration: int
@@ -30,3 +32,10 @@ class PagedAggSessionsDto:
     data: List[DailyAggSessionDto]
     has_next: bool
     has_prev: bool
+
+
+@dataclass
+class SessionsFeedDto:
+    data: List[SessionDto]
+    earlier_token: Optional[str]
+    later_token: Optional[str]

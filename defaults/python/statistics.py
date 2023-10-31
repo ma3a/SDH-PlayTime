@@ -1,10 +1,11 @@
 from collections import defaultdict
 from datetime import date, timedelta
 from typing import Dict, List
-from python.db.models import DailyAggSessionDto
+from python.db.models import DailyAggSessionDto, SessionDto
 from python.db.service import StorageService
 from python.helpers import end_of_day, start_of_day
-from python.models import DayStatistics, Game, GameWithTime, PagedDayStatistics
+from python.models import DayStatistics, FeedRequest, Game, GameWithTime, PagedDayStatistics, \
+    Session, SessionsFeed
 
 
 class Statistics:
@@ -30,6 +31,27 @@ class Statistics:
                   for (date) in date_range],
             hasNext=paged.has_next,
             hasPrev=paged.has_prev
+        )
+
+    def fetch_sessions_feed(self, token: str) -> SessionsFeed:
+        feed_request = FeedRequest(
+            token_str=token
+        ) if token else FeedRequest(
+            limit=100,
+            direction="LATER"
+        )
+        data = self.service.fetch_sessions_feed(feed_request)
+        return SessionsFeed(
+            data=[self._map_session(it) for it in data.data],
+            earlierToken=data.earlier_token,
+            laterToken=data.later_token
+        )
+
+    def _map_session(self, session: SessionDto) -> Session:
+        return Session(
+            dateTime=session.date_time.isoformat(),
+            game=Game(id=session.game_id, name=session.game_name),
+            duration=session.duration
         )
 
     def _map_to_daily_stat(

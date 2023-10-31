@@ -57,12 +57,13 @@ class SteamPatches implements Mountable {
             appInfoStore.OriginalOnAppOverviewChange = appInfoStore.OnAppOverviewChange
             let instance = this
             appInfoStore.OnAppOverviewChange = function (apps: Array<any>) {
-                let appIds = apps
-                    .filter((_: any) => typeof _.appid() === 'number')
-                    .map((_: any) => _.appid() as number)
+                let appIds = apps.map((_: any) => fetchAppId(_.appid))
                 instance.appInfoStoreOnAppOverviewChange(appIds)
                 logger.debug(`AppInfoStore.OnAppOverviewChange: calling original`)
-                this.OriginalOnAppOverviewChange(apps)
+                let appsWithFunction = apps.filter(
+                    (app) => typeof app.appId === 'function'
+                )
+                this.OriginalOnAppOverviewChange(appsWithFunction)
             }
         }
     }
@@ -153,4 +154,12 @@ class SteamPatches implements Mountable {
         }
         return appOverview
     }
+}
+
+function fetchAppId(appId: any): number {
+    // is appId is function?
+    if (typeof appId === 'function') {
+        return appId()
+    }
+    return appId
 }
