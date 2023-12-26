@@ -137,7 +137,6 @@ export const ManuallyAdjustTimePage: VFC = () => {
                                 </div>
                                 <TextField
                                     mustBeNumeric
-                                    value={row.desiredHours?.toFixed(2)?.toString()}
                                     onChange={(e) =>
                                         onDesiredHoursChange(idx, e.target.value)
                                     }
