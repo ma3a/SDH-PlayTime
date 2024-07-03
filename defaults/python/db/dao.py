@@ -185,18 +185,18 @@ class Dao:
             date=row[0], game_id=row[1], game_name=row[2], time=row[3])
         result = connection.execute(
             """
-                SELECT STRFTIME('%Y-%m-%d', UNIXEPOCH(date_time), 'unixepoch') as date,
+                SELECT STRFTIME('%Y-%m-%d', STRFTIME('%s', date_time), 'unixepoch') as date,
                     pt.game_id as game_id,
                     gd.name as game_name,
                     SUM(duration) as total_time,
                     duration as total_time
                 FROM play_time pt
                         LEFT JOIN game_dict gd ON pt.game_id = gd.game_id
-                WHERE UNIXEPOCH(date_time) BETWEEN UNIXEPOCH(:begin) AND
-                    UNIXEPOCH(:end)
+                WHERE STRFTIME('%s', date_time) BETWEEN STRFTIME('%s', :begin) AND
+                    STRFTIME('%s', :end)
                 AND migrated IS NULL
 
-                GROUP BY STRFTIME('%Y-%m-%d', UNIXEPOCH(date_time), 'unixepoch'),
+                GROUP BY STRFTIME('%Y-%m-%d', STRFTIME('%s', date_time), 'unixepoch'),
                          pt.game_id,
                          gd.name
             """,

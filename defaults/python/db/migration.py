@@ -34,7 +34,7 @@ _migrations = [
     Migration(2, [
         """
         CREATE INDEX play_time_date_time_epoch_idx
-            ON play_time(UNIXEPOCH(date_time))
+            ON play_time(STRFTIME('%s', date_time))
         """,
         """
         CREATE INDEX play_time_game_id_idx
@@ -47,7 +47,16 @@ _migrations = [
     ]),
     Migration(3, [
         "ALTER TABLE play_time ADD COLUMN migrated TEXT"
-    ])
+    ]),
+    Migration(4, [
+        """
+        DROP INDEX play_time_date_time_epoch_idx
+        """,
+        """
+        CREATE INDEX play_time_date_time_epoch_idx
+            ON play_time(STRFTIME('%s', date_time))
+        """
+    ]),
 ]
 
 
