@@ -1,6 +1,6 @@
 {
     "name": "PlayTime",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "PlayTime",
     "scripts": {
         "build": "shx rm -rf dist && rollup -c"
