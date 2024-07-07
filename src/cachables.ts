@@ -32,8 +32,9 @@ export let createCachedLastTwoWeeksPlayTimes = (backend: Backend, eventBus: Even
                         time.games.forEach((game) => {
                             if (map.has(game.game.id)) {
                                 map.set(game.game.id, map.get(game.game.id)! + game.time)
+                            } else {
+                                map.set(game.game.id, game.time)
                             }
-                            map.set(game.game.id, game.time)
                         })
                     })
                     return map
