@@ -35,7 +35,7 @@ class SteamPatches implements Mountable {
                         changedApps.push(appOverview)
                     }
                 }
-                appInfoStore.OnAppOverviewChange(changedApps)
+                //appInfoStore.OnAppOverviewChange(changedApps) // incompatible call + not needed
                 appStore.m_mapApps.set(
                     changedApps.map((app) => app.appid),
                     changedApps
