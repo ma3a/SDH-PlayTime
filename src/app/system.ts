@@ -54,7 +54,7 @@ class MountManager {
     }
 
     unMount() {
-        this.mounts.forEach((mount) => mount.unMount())
+        this.mounts.slice().reverse().forEach((mount) => mount.unMount())
         this.eventBus.emit({
             type: 'Unmount',
             createdAt: this.clock.getTimeMs(),
