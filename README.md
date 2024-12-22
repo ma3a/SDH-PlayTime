@@ -1,3 +1,8 @@
+# Project Archive Notice
+
+This project is being archived due to time constraints that have prevented me from maintaining it, despite my strong interest and enthusiasm for its development. There are several features and enhancements that I had hoped to implement, but unfortunately, I am unable to continue working on them at this time.
+I encourage anyone interested in the project to explore the existing codebase and contribute if they wish. Thank you for your understanding and support.
+
 # PlayTime
 
 ![PlayTime Logo](assets/image.png)
